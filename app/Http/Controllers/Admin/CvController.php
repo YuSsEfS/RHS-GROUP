@@ -4,39 +4,190 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cv;
+use App\Models\CvFolder;
 use App\Models\JobApplication;
+use App\Models\JobOffer;
 use App\Services\OpenAiRecruitmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Smalot\PdfParser\Parser as PdfParser;
+use Illuminate\Support\Str;
 use PhpOffice\PhpWord\IOFactory;
+use Smalot\PdfParser\Parser as PdfParser;
 
 class CvController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $cvs = Cv::latest()->paginate(20);
+        $q = trim((string) $request->query('q', ''));
+        $source = trim((string) $request->query('source', 'all'));
+        $folder = trim((string) $request->query('folder', 'all'));
+        $status = trim((string) $request->query('status', 'active'));
+        $offer = trim((string) $request->query('offer', 'all'));
 
-        return view('admin.cvs.index', compact('cvs'));
+        // direction now means date order only
+        $direction = trim((string) $request->query('direction', 'desc'));
+        if (!in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
+        $query = Cv::query();
+
+        if (method_exists(Cv::class, 'folder')) {
+            $query->with('folder');
+        }
+
+        $query->when($q !== '', function ($builder) use ($q) {
+            $builder->where(function ($sub) use ($q) {
+                $sub->where('candidate_name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%")
+                    ->orWhere('original_filename', 'like', "%{$q}%");
+
+                if (Schema::hasColumn('cvs', 'city')) {
+                    $sub->orWhere('city', 'like', "%{$q}%");
+                }
+
+                if (Schema::hasColumn('cvs', 'current_title')) {
+                    $sub->orWhere('current_title', 'like', "%{$q}%");
+                }
+            });
+        });
+
+        if (Schema::hasColumn('cvs', 'source_type') && $source !== '' && $source !== 'all') {
+            $query->where('source_type', $source);
+        }
+
+        if (Schema::hasColumn('cvs', 'cv_folder_id') && $folder !== '' && $folder !== 'all') {
+            $query->where('cv_folder_id', (int) $folder);
+        }
+
+        if (Schema::hasColumn('cvs', 'is_active')) {
+            if ($status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Offer filter
+        |--------------------------------------------------------------------------
+        | Works for CVs synced from website applications:
+        | cvs.source_type = application
+        | cvs.source_id   = job_applications.id
+        */
+        if (
+            $offer !== '' &&
+            $offer !== 'all' &&
+            Schema::hasColumn('cvs', 'source_type') &&
+            Schema::hasColumn('cvs', 'source_id')
+        ) {
+            if ($offer === 'spontaneous') {
+                $query->where(function ($q2) {
+                    $q2->where(function ($q3) {
+                        $q3->where('source_type', 'application')
+                            ->whereIn('source_id', function ($sub) {
+                                $sub->select('id')
+                                    ->from('job_applications')
+                                    ->whereNull('job_offer_id');
+                            });
+                    });
+                });
+            } else {
+                $offerId = (int) $offer;
+
+                $query->where(function ($q2) use ($offerId) {
+                    $q2->where(function ($q3) use ($offerId) {
+                        $q3->where('source_type', 'application')
+                            ->whereIn('source_id', function ($sub) use ($offerId) {
+                                $sub->select('id')
+                                    ->from('job_applications')
+                                    ->where('job_offer_id', $offerId);
+                            });
+                    });
+                });
+            }
+        }
+
+        // date sorting only
+        if (Schema::hasColumn('cvs', 'uploaded_at')) {
+            $query->orderBy('uploaded_at', $direction)->orderBy('id', 'desc');
+        } else {
+            $query->orderBy('id', $direction);
+        }
+
+        $cvs = $query->get();
+
+        $folders = class_exists(CvFolder::class)
+            ? CvFolder::query()->orderBy('name')->get()
+            : collect();
+
+        $offers = JobOffer::query()
+            ->select('id', 'title')
+            ->orderBy('title')
+            ->get();
+
+        return view('admin.cvs.index', compact(
+            'cvs',
+            'folders',
+            'offers',
+            'q',
+            'source',
+            'folder',
+            'status',
+            'offer',
+            'direction'
+        ));
     }
 
     public function create()
     {
-        return view('admin.cvs.create');
+        $folders = class_exists(CvFolder::class)
+            ? CvFolder::query()->orderBy('name')->get()
+            : collect();
+
+        return view('admin.cvs.create', compact('folders'));
     }
 
     public function store(Request $request, OpenAiRecruitmentService $ai)
     {
-        $request->validate([
+        $rules = [
             'cv_files' => ['required', 'array'],
             'cv_files.*' => ['required', 'file', 'mimes:pdf,doc,docx,txt', 'max:10240'],
-        ]);
+            'new_folder_name' => ['nullable', 'string', 'max:255'],
+        ];
 
-        foreach ($request->file('cv_files') as $file) {
+        if (Schema::hasColumn('cvs', 'cv_folder_id')) {
+            $rules['cv_folder_id'] = ['nullable', 'integer', 'exists:cv_folders,id'];
+        }
+
+        if (Schema::hasColumn('cvs', 'city')) {
+            $rules['city'] = ['nullable', 'string', 'max:255'];
+        }
+
+        if (Schema::hasColumn('cvs', 'current_title')) {
+            $rules['current_title'] = ['nullable', 'string', 'max:255'];
+        }
+
+        if (Schema::hasColumn('cvs', 'notes')) {
+            $rules['notes'] = ['nullable', 'string'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $targetFolderId = $this->resolveTargetFolderId($request);
+
+        $uploadedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($request->file('cv_files', []) as $file) {
             $binary = file_get_contents($file->getRealPath());
             $hash = hash('sha256', $binary);
 
             if (Cv::where('file_hash', $hash)->exists()) {
+                $skippedCount++;
                 continue;
             }
 
@@ -56,17 +207,43 @@ class CvController extends Controller
                 'industries' => [],
                 'certifications' => [],
                 'summary' => $text ? mb_substr($text, 0, 1500) : null,
+                'city' => null,
             ];
 
             try {
-                $profile = $ai->structureCv($text);
+                if (!empty($text)) {
+                    $structured = $ai->structureCv($text);
+
+                    if (is_array($structured) && !empty($structured)) {
+                        $profile = array_merge($profile, $structured);
+                    }
+                }
             } catch (\Throwable $e) {
+                //
             }
 
-            $storedPath = 'private/cvs/' . uniqid() . '.' . $extension;
+            $storedPath = 'private/cvs/' . uniqid('cv_', true) . '.' . $extension;
             Storage::disk('local')->put($storedPath, $binary);
 
-            Cv::create([
+            $resolvedCity = $validated['city'] ?? null;
+            $resolvedTitle = $validated['current_title'] ?? null;
+
+            if (!$resolvedCity) {
+                $resolvedCity = $profile['city']
+                    ?? data_get($profile, 'location.city')
+                    ?? data_get($profile, 'address.city')
+                    ?? null;
+            }
+
+            if (!$resolvedTitle) {
+                $resolvedTitle = $profile['title']
+                    ?? data_get($profile, 'current_title')
+                    ?? data_get($profile, 'headline')
+                    ?? data_get($profile, 'desired_position')
+                    ?? null;
+            }
+
+            $data = [
                 'candidate_name' => $profile['full_name'] ?? null,
                 'email' => $profile['email'] ?? null,
                 'phone' => $profile['phone'] ?? null,
@@ -78,19 +255,52 @@ class CvController extends Controller
                 'structured_profile' => $profile,
                 'file_hash' => $hash,
                 'uploaded_at' => now(),
-            ]);
+            ];
+
+            if (Schema::hasColumn('cvs', 'source_type')) {
+                $data['source_type'] = 'manual';
+            }
+
+            if (Schema::hasColumn('cvs', 'source_id')) {
+                $data['source_id'] = null;
+            }
+
+            if (Schema::hasColumn('cvs', 'cv_folder_id')) {
+                $data['cv_folder_id'] = $targetFolderId;
+            }
+
+            if (Schema::hasColumn('cvs', 'city')) {
+                $data['city'] = $resolvedCity;
+            }
+
+            if (Schema::hasColumn('cvs', 'current_title')) {
+                $data['current_title'] = $resolvedTitle;
+            }
+
+            if (Schema::hasColumn('cvs', 'is_active')) {
+                $data['is_active'] = true;
+            }
+
+            if (Schema::hasColumn('cvs', 'notes')) {
+                $data['notes'] = $validated['notes'] ?? null;
+            }
+
+            Cv::create($data);
+            $uploadedCount++;
         }
 
-        return redirect()->route('admin.cvs.index')->with('success', 'CVs uploaded successfully.');
+        $message = "{$uploadedCount} CV(s) importé(s) avec succès.";
+        if ($skippedCount > 0) {
+            $message .= " {$skippedCount} fichier(s) en double ignoré(s).";
+        }
+
+        return redirect()
+            ->route('admin.cvs.index')
+            ->with('success', $message);
     }
 
     public function open(Cv $cv)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | 1) Preferred: open copied/private CV from local disk
-        |--------------------------------------------------------------------------
-        */
         if (!empty($cv->encrypted_path) && Storage::disk('local')->exists($cv->encrypted_path)) {
             $fullPath = Storage::disk('local')->path($cv->encrypted_path);
             $filename = $cv->original_filename ?: ('cv-' . $cv->id);
@@ -102,19 +312,45 @@ class CvController extends Controller
             ]);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | 2) Fallback: try to find original file from old JobApplication
-        |--------------------------------------------------------------------------
-        */
+        if (
+            Schema::hasColumn('cvs', 'source_type') &&
+            Schema::hasColumn('cvs', 'source_id') &&
+            $cv->source_type === 'application' &&
+            !empty($cv->source_id)
+        ) {
+            $application = JobApplication::find($cv->source_id);
+
+            if ($application && !empty($application->cv_path)) {
+                $relativePath = ltrim($application->cv_path, '/');
+
+                if (Storage::disk('public')->exists($relativePath)) {
+                    $fullPath = Storage::disk('public')->path($relativePath);
+                    $filename = basename($relativePath);
+                    $mime = $cv->mime_type ?: $this->guessMimeTypeFromExtension(pathinfo($relativePath, PATHINFO_EXTENSION));
+
+                    return response()->file($fullPath, [
+                        'Content-Type' => $mime,
+                        'Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"',
+                    ]);
+                }
+            }
+        }
+
         $jobApplication = JobApplication::query()
             ->where(function ($q) use ($cv) {
+                $hasAny = false;
+
                 if (!empty($cv->email)) {
                     $q->where('email', $cv->email);
+                    $hasAny = true;
                 }
 
                 if (!empty($cv->candidate_name)) {
-                    $q->orWhere('full_name', $cv->candidate_name);
+                    if ($hasAny) {
+                        $q->orWhere('full_name', $cv->candidate_name);
+                    } else {
+                        $q->where('full_name', $cv->candidate_name);
+                    }
                 }
             })
             ->whereNotNull('cv_path')
@@ -139,31 +375,137 @@ class CvController extends Controller
         abort(404, 'CV file not found.');
     }
 
-    private function extractTextFromFile(string $filePath, string $extension): string
+    public function assignFolder(Request $request, Cv $cv)
     {
-        if ($extension === 'pdf') {
-            $parser = new PdfParser();
-            $pdf = $parser->parseFile($filePath);
-            return trim($pdf->getText());
+        $validated = $request->validate([
+            'cv_folder_id' => ['nullable', 'integer', 'exists:cv_folders,id'],
+        ]);
+
+        if (Schema::hasColumn('cvs', 'cv_folder_id')) {
+            $cv->cv_folder_id = $validated['cv_folder_id'] ?? null;
+            $cv->save();
         }
 
-        if (in_array($extension, ['doc', 'docx'])) {
-            $phpWord = IOFactory::load($filePath);
-            $text = '';
+        return redirect()
+            ->route('admin.cvs.index')
+            ->with('success', 'Dossier du CV mis à jour avec succès.');
+    }
 
-            foreach ($phpWord->getSections() as $section) {
-                foreach ($section->getElements() as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
-                    }
-                }
+    public function destroy(Cv $cv)
+    {
+        if (!empty($cv->encrypted_path) && Storage::disk('local')->exists($cv->encrypted_path)) {
+            Storage::disk('local')->delete($cv->encrypted_path);
+        }
+
+        $cv->delete();
+
+        return redirect()
+            ->route('admin.cvs.index')
+            ->with('success', 'CV supprimé avec succès.');
+    }
+
+    private function resolveTargetFolderId(Request $request): ?int
+    {
+        if (!class_exists(CvFolder::class)) {
+            return null;
+        }
+
+        $existingFolderId = $request->filled('cv_folder_id')
+            ? (int) $request->input('cv_folder_id')
+            : null;
+
+        $newFolderName = trim((string) $request->input('new_folder_name', ''));
+
+        if ($newFolderName !== '') {
+            $folder = CvFolder::firstOrCreate(
+                ['slug' => Str::slug($newFolderName)],
+                [
+                    'name' => $newFolderName,
+                    'description' => null,
+                    'created_by' => optional(auth()->user())->id,
+                ]
+            );
+
+            return (int) $folder->id;
+        }
+
+        if ($existingFolderId) {
+            return $existingFolderId;
+        }
+
+        $uploadedDirName = $this->extractTopDirectoryNameFromUpload($request);
+
+        if ($uploadedDirName) {
+            $folder = CvFolder::firstOrCreate(
+                ['slug' => Str::slug($uploadedDirName)],
+                [
+                    'name' => $uploadedDirName,
+                    'description' => null,
+                    'created_by' => optional(auth()->user())->id,
+                ]
+            );
+
+            return (int) $folder->id;
+        }
+
+        return null;
+    }
+
+    private function extractTopDirectoryNameFromUpload(Request $request): ?string
+    {
+        $relativePaths = $request->input('relative_paths', []);
+
+        if (!is_array($relativePaths) || empty($relativePaths)) {
+            return null;
+        }
+
+        foreach ($relativePaths as $path) {
+            $path = trim((string) $path);
+
+            if ($path === '') {
+                continue;
             }
 
-            return trim($text);
+            $path = str_replace('\\', '/', $path);
+            $parts = array_values(array_filter(explode('/', $path)));
+
+            if (count($parts) >= 2) {
+                return $parts[0];
+            }
         }
 
-        if ($extension === 'txt') {
-            return trim(file_get_contents($filePath));
+        return null;
+    }
+
+    private function extractTextFromFile(string $filePath, string $extension): string
+    {
+        try {
+            if ($extension === 'pdf') {
+                $parser = new PdfParser();
+                $pdf = $parser->parseFile($filePath);
+                return trim($pdf->getText());
+            }
+
+            if (in_array($extension, ['doc', 'docx'], true)) {
+                $phpWord = IOFactory::load($filePath);
+                $text = '';
+
+                foreach ($phpWord->getSections() as $section) {
+                    foreach ($section->getElements() as $element) {
+                        if (method_exists($element, 'getText')) {
+                            $text .= $element->getText() . "\n";
+                        }
+                    }
+                }
+
+                return trim($text);
+            }
+
+            if ($extension === 'txt') {
+                return trim((string) file_get_contents($filePath));
+            }
+        } catch (\Throwable $e) {
+            return '';
         }
 
         return '';

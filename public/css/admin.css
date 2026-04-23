@@ -1679,4 +1679,271 @@
     .form-actions{ justify-content:stretch; }
     .btn{ width:100%; }
   }
+/* =========================================
+   GLOBAL NATIVE SELECT STYLE
+   ========================================= */
 
+select,
+select.form-select,
+select.cv-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+
+  padding: 0 44px 0 14px !important;
+
+  border: 1px solid #dbe2ea !important;
+  border-radius: 14px !important;
+
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+
+  font: inherit !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+
+  cursor: pointer !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  
+  transition: border-color .18s ease,
+            box-shadow .18s ease,
+            background-color .18s ease !important;
+
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none'><path d='M7 10l5 5 5-5' stroke='%23647569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 16px !important;
+}
+
+/* hover */
+select:hover,
+select.form-select:hover,
+select.cv-select:hover {
+  border-color: #cbd5e1 !important;
+  background-color: #fcfdff !important;
+}
+
+/* focus */
+select:focus,
+select.form-select:focus,
+select.cv-select:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.14) !important;
+  background-color: #ffffff !important;
+}
+
+/* active/open state on some browsers */
+select:active,
+select.form-select:active,
+select.cv-select:active {
+  border-color: #94a3b8 !important;
+  background-color: #ffffff !important;
+}
+
+/* disabled */
+select:disabled,
+select.form-select:disabled,
+select.cv-select:disabled {
+  background-color: #f8fafc !important;
+  color: #94a3b8 !important;
+  border-color: #e2e8f0 !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+}
+
+/* small variant */
+select.select-sm {
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+}
+
+/* inline table select */
+.cv-folder-assign select {
+  min-width: 160px !important;
+  max-width: 180px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  padding-right: 38px !important;
+}
+
+/* =========================================
+   OPTION STYLING
+   ========================================= */
+
+select option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font: inherit !important;
+  font-size: 15px !important;
+  padding: 10px !important;
+}
+
+/* selected option */
+select option:checked {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* some browsers partially respect this */
+select option:hover,
+select option:focus,
+select option:active {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+/* optgroup */
+select optgroup {
+  font-style: normal !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  background: #f8fafc !important;
+}
+
+/* =========================================
+   DARK MODE SUPPORT
+   ========================================= */
+
+.dark select,
+.dark select.form-select,
+.dark select.cv-select {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none'><path d='M7 10l5 5 5-5' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+}
+
+.dark select option,
+.dark select optgroup {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+.dark select option:checked {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+/* =========================================
+   GLOBAL NATIVE SELECT UPGRADE
+   ========================================= */
+
+select,
+select.form-select,
+select.cv-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+
+  padding: 0 44px 0 14px !important;
+
+  border: 1px solid #dbe2ea !important;
+  border-radius: 14px !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+
+  font: inherit !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+
+  cursor: pointer !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  transition: all .18s ease !important;
+
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none'><path d='M7 10l5 5 5-5' stroke='%23647569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 16px !important;
+}
+
+select:hover,
+select.form-select:hover,
+select.cv-select:hover {
+  border-color: #fca5a5 !important;
+  background-color: #fffafa !important;
+}
+
+select:focus,
+select.form-select:focus,
+select.cv-select:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+  background-color: #ffffff !important;
+}
+
+select:active,
+select.form-select:active,
+select.cv-select:active {
+  border-color: #ef4444 !important;
+  background-color: #ffffff !important;
+}
+
+select:disabled,
+select.form-select:disabled,
+select.cv-select:disabled {
+  background: #f8fafc !important;
+  color: #94a3b8 !important;
+  border-color: #e2e8f0 !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+}
+
+/* Option styling: partial browser support */
+select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font: inherit !important;
+  font-size: 15px !important;
+  padding: 10px !important;
+  border-radius: 12px !important;
+}
+
+/* selected item */
+select option:checked {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* hover/focus on some browsers only */
+select option:hover,
+select option:focus,
+select option:active {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #991b1b !important;
+}
+
+/* optgroup */
+select optgroup {
+  background: #fff5f5 !important;
+  color: #7f1d1d !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+}
+
+/* specific small inline select */
+.cv-folder-assign select {
+  min-width: 160px !important;
+  max-width: 180px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  padding-right: 38px !important;
+}
