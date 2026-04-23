@@ -49,4 +49,8 @@ class User extends Authenticatable
 {
     return $this->hasMany(CvFolder::class, 'created_by');
 }
+public function externalCvBatches()
+{
+    return $this->hasMany(ExternalCvBatch::class, 'created_by');
+}
 }

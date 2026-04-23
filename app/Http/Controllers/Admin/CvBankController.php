@@ -47,4 +47,19 @@ class CvBankController extends Controller
 
         return view('admin.cv-bank.index', compact('cvs', 'folders', 'q', 'source', 'folder'));
     }
+
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'cv_ids' => ['required', 'array', 'min:1'],
+            'cv_ids.*' => ['integer', 'exists:cvs,id'],
+        ]);
+
+        Cv::whereIn('id', $validated['cv_ids'])->delete();
+
+        return redirect()
+            ->route('admin.cvs.index')
+            ->with('success', count($validated['cv_ids']) . ' CV supprimé(s) avec succès.');
+    }
 }

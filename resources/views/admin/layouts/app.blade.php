@@ -72,6 +72,19 @@
         </span>
         CV Bank
       </a>
+      <a href="{{ route('admin.external-cvs.index') }}"
+   class="{{ request()->routeIs('admin.external-cvs.*') ? 'is-active' : '' }}">
+  <span class="admin-ico">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 6h16M4 12h16M4 18h16"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+    </svg>
+  </span>
+  Base externe
+</a>
 
       <a href="{{ route('admin.recruitment_requests.create') }}" class="{{ request()->routeIs('admin.recruitment_requests.*') || request()->routeIs('admin.matches.*') ? 'is-active' : '' }}">
         <span class="admin-ico">

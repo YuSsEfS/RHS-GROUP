@@ -54,4 +54,8 @@ class Cv extends Model
             default => 'Unknown',
         };
     }
+    public function externalImports()
+{
+    return $this->hasMany(ExternalCv::class, 'cv_id');
+}
 }

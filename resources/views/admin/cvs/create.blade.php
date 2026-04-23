@@ -107,12 +107,35 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
       font-size:13px;
       margin-top:8px;
     }
+
     .upload-list{
       margin-top:18px;
       display:grid;
       gap:10px;
+      max-height:360px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding-right:8px;
+      scroll-behavior:smooth;
     }
+
+    .upload-list::-webkit-scrollbar{
+      width:8px;
+    }
+    .upload-list::-webkit-scrollbar-track{
+      background:#f1f5f9;
+      border-radius:999px;
+    }
+    .upload-list::-webkit-scrollbar-thumb{
+      background:#cbd5e1;
+      border-radius:999px;
+    }
+    .upload-list::-webkit-scrollbar-thumb:hover{
+      background:#94a3b8;
+    }
+
     .upload-file{
+      min-height:78px;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -131,6 +154,7 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
       color:#64748b;
       font-size:13px;
       margin-top:4px;
+      word-break:break-word;
     }
     .upload-empty{
       padding:14px 16px;
@@ -177,6 +201,9 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
       }
       .cv-form-item.full{
         grid-column:auto;
+      }
+      .upload-list{
+        max-height:340px;
       }
     }
   </style>
@@ -392,7 +419,13 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
         const map = new Map();
 
         files.forEach(file => {
-          const key = [file.name, file.size, file.lastModified].join('__');
+          const key = [
+            file.webkitRelativePath || '',
+            file.name,
+            file.size,
+            file.lastModified
+          ].join('__');
+
           if (!map.has(key)) {
             map.set(key, file);
           }
@@ -410,12 +443,11 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
       function syncRelativePaths() {
         relativePathsContainer.innerHTML = '';
 
-        currentFiles.forEach((file, index) => {
-          const relativePath = file.webkitRelativePath || '';
+        currentFiles.forEach(file => {
           const input = document.createElement('input');
           input.type = 'hidden';
           input.name = 'relative_paths[]';
-          input.value = relativePath;
+          input.value = file.webkitRelativePath || '';
           relativePathsContainer.appendChild(input);
         });
       }
@@ -443,7 +475,10 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
         }
 
         uploadList.innerHTML = currentFiles.map((file, index) => {
-          const relative = file.webkitRelativePath ? `<div class="upload-file-meta">${file.webkitRelativePath}</div>` : '';
+          const relative = file.webkitRelativePath
+            ? `<div class="upload-file-meta">${escapeHtml(file.webkitRelativePath)}</div>`
+            : '';
+
           return `
             <div class="upload-file">
               <div>
@@ -471,11 +506,15 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
 
       function addFiles(fileList) {
         const incoming = Array.from(fileList).filter(isAllowed);
+
         currentFiles = dedupeFiles([...currentFiles, ...incoming]);
+
         syncInputFiles();
         syncRelativePaths();
         maybeSetFolderNameFromUpload();
         renderList();
+
+        uploadList.scrollTop = uploadList.scrollHeight;
       }
 
       function escapeHtml(value) {
@@ -497,10 +536,12 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
 
       fileInput.addEventListener('change', function (e) {
         addFiles(e.target.files);
+        fileInput.value = '';
       });
 
       folderInput.addEventListener('change', function (e) {
         addFiles(e.target.files);
+        folderInput.value = '';
       });
 
       ['dragenter', 'dragover'].forEach(eventName => {
