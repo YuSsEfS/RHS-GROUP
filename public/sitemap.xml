@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    <!-- HOME -->
+    <url>
+        <loc>https://rhsgroup.ma/</loc>
+        <lastmod>2026-02-03</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- ABOUT -->
+    <url>
+        <loc>https://rhsgroup.ma/a-propos</loc>
+        <lastmod>2026-02-03</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <!-- JOB OFFERS -->
+    <url>
+        <loc>https://rhsgroup.ma/offres-emploi</loc>
+        <lastmod>2026-02-03</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <!-- APPLY -->
+    <url>
+        <loc>https://rhsgroup.ma/postuler</loc>
+        <lastmod>2026-02-03</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <!-- SPONTANEOUS APPLICATION -->
+    <url>
+        <loc>https://rhsgroup.ma/postuler?type=spontaneous</loc>
+        <lastmod>2026-02-03</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- FORMATIONS -->
+    <url>
+        <loc>https://rhsgroup.ma/formations</loc>
+        <lastmod>2026-02-03</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <!-- CONTACT -->
+    <url>
+        <loc>https://rhsgroup.ma/contact</loc>
+        <lastmod>2026-02-03</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+</urlset>

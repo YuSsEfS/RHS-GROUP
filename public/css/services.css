@@ -1,0 +1,298 @@
+/* ============================================================
+   SERVICES PAGE
+=============================================================== */
+.services-page {
+    background:#fafafa;
+}
+
+/* ============================================================
+   HERO (SAME STRUCTURE AS ABOUT PAGE)
+=============================================================== */
+.services-hero {
+    position: relative;
+    height: calc(100vh - 140px); /* topbar + navbar */
+    display: flex;
+    align-items: center;
+    color: #fff;
+    overflow: hidden;
+
+    background-image:
+        linear-gradient(
+            110deg,
+            rgba(0,0,0,0.88) 0%,
+            rgba(0,0,0,0.75) 32%,
+            rgba(0,0,0,0.45) 48%,
+            rgba(0,0,0,0.22) 62%,
+            rgba(0,0,0,0.08) 74%,
+            transparent 86%
+        ),
+        url('/images/freepik__assistant__14091.png');
+    background-size: cover;
+    background-position: right center;
+}
+
+/* IMPORTANT: container stays natural */
+.services-hero .container {
+    width: 100%;
+}
+
+/* LEFT CONTENT BLOCK (THIS FIXES EVERYTHING) */
+.services-hero-content {
+    max-width: 560px;
+    margin-left: 0;
+    margin-right: auto;
+    text-align: left;
+}
+
+/* EYEBROW */
+.services-eyebrow {
+    text-transform: uppercase;
+    color: #e23b31;
+    font-weight: 700;
+    letter-spacing: .25em;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+/* TITLE */
+.services-title {
+    font-size: 56px;
+    line-height: 1.1;
+    font-weight: 700;
+    margin-bottom: 22px;
+}
+
+.services-title span {
+    color: #e23b31;
+}
+
+/* SUBTITLE */
+.services-subtitle {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #e6e6e6;
+    max-width: 500px;
+}
+
+/* ============================================================
+   SERVICES GRID
+=============================================================== */
+.services-grid-section {
+    padding: 100px 0;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 40px;
+}
+
+.service-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 42px 34px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.08);
+    transition: .35s cubic-bezier(.22,.61,.36,1);
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+}
+
+.service-card.featured {
+    border: 2px solid #e23b31;
+}
+
+.service-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    background: #fdecec;
+    display: grid;
+    place-items: center;
+    margin-bottom: 22px;
+}
+
+.service-icon img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.service-card h3 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.service-card p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.service-card ul {
+    list-style: none;
+    margin-bottom: 24px;
+}
+
+.service-card ul li {
+    color: #e23b31;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+/* BUTTON */
+.service-btn {
+    display: inline-block;
+    background: #e23b31;
+    color: #fff;
+    padding: 12px 26px;
+    border-radius: 10px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.service-btn:hover {
+    background: #c92927;
+}
+
+/* ============================================================
+   CTA SECTION
+=============================================================== */
+.services-cta {
+    background: #111;
+    color: #fff;
+    padding: 90px 0;
+}
+
+.services-cta-inner {
+    max-width: 620px;
+    margin: auto;
+    text-align: center;
+}
+
+.services-cta h2 {
+    font-size: 36px;
+    font-weight: 900;
+}
+
+.services-cta h2 span {
+    color: #e23b31;
+}
+
+.services-cta p {
+    margin: 18px 0 26px;
+    color: #ccc;
+}
+
+/* ============================================================
+   RESPONSIVE
+=============================================================== */
+@media (max-width: 992px) {
+    .services-hero {
+        height: auto;
+        padding: 80px 0 60px;
+        background-position: center;
+    }
+
+    .services-title {
+        font-size: 42px;
+    }
+
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .services-title {
+        font-size: 34px;
+    }
+
+    .services-hero-content {
+        max-width: 100%;
+    }
+}
+/* ============================================================
+   RESPONSIVE FIXES WITH 100VH HERO
+=============================================================== */
+@media (max-width: 1200px) {
+    .services-hero {
+      height: calc(100vh - 108px); /* full viewport minus topbar + navbar */
+        padding: 60px 40px;
+        background-position: center center;
+    }
+
+    .services-hero-content {
+        max-width: 100%;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .services-title {
+        font-size: 44px;
+    }
+
+    .services-subtitle {
+        font-size: 16px;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .services-hero {
+        height: 100vh; /* keep hero full height */
+        padding: 50px 20px;
+    }
+
+    .services-title {
+        font-size: 38px;
+    }
+
+    .services-subtitle {
+        font-size: 15px;
+    }
+
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .services-title {
+        font-size: 32px;
+    }
+
+    .services-subtitle {
+        font-size: 14px;
+    }
+
+    .service-card {
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .services-hero {
+        height: 100vh; /* full height on small screens */
+        padding: 40px 15px;
+    }
+
+    .services-hero-content {
+        padding: 0 10px;
+    }
+
+    .services-title {
+        font-size: 28px;
+    }
+
+    .services-subtitle {
+        font-size: 13px;
+    }
+
+    .service-card {
+        padding: 25px 15px;
+    }
+}

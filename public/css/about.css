@@ -1,0 +1,492 @@
+/* ============================================================
+   ABOUT PAGE WRAPPER
+=============================================================== */
+.about-page {
+    background: #fafafa;
+}
+
+/* ============================================================
+   HERO (100vh WITH NAVBAR)
+=============================================================== */
+.about-page .about-hero {
+    position: relative;
+    height: calc(100vh - 140px); /* topbar + navbar */
+    display: flex;
+    align-items: center;
+    color: #fff;
+    overflow: visible !important;
+    z-index: 1;
+    background-image:
+        linear-gradient(
+            110deg,
+            rgba(0, 0, 0, 0.85) 0%,
+            rgba(0, 0, 0, 0.75) 35%,
+            rgba(0, 0, 0, 0.25) 65%,
+            rgba(0, 0, 0, 0.05) 80%,
+            transparent 100%
+        ),
+        url('/images/103954.jpg');
+    background-size: cover;
+    background-position: right center;
+}
+
+.about-page .about-hero-inner {
+    max-width: 620px;
+    padding: 80px 0;
+    margin-left: 0;       /* force full left */
+    transform: translateX(0);
+    text-align: left;
+}
+
+
+.about-page .about-hero-title {
+    font-size: 58px;
+    line-height: 1.1;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+.about-page .about-hero-title span {
+    color: #e23b31;
+}
+
+.about-page .about-hero-subtitle {
+    font-size: 19px;
+    line-height: 1.6;
+    color: #e6e6e6;
+    margin-bottom: 32px;
+}
+
+.about-page .about-hero-buttons {
+    display: flex;
+    gap: 18px;
+}
+.about-page .about-hero {
+    justify-content: flex-start;
+    padding-left: 80px; /* shifts hero content to the left */
+}
+
+
+/* ============================================================
+   DIRECTOR SECTION
+=============================================================== */
+.about-page .director-section {
+    padding: 90px 0 40px;
+}
+
+.about-page .director-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 45px 50px;
+    display: flex;
+    gap: 40px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.06);
+}
+
+.about-page .director-img-wrapper {
+    background: #fdecec;
+    border-radius: 18px;
+    padding: 16px;
+    flex-shrink: 0;
+}
+
+.about-page .director-img {
+    width: 360px;
+    height: 460px;
+    object-fit: cover;
+    border-radius: 14px;
+}
+
+.about-page .director-content {
+    flex: 1;
+}
+
+.about-page .director-eyebrow {
+    text-transform: uppercase;
+    color: #e23b31;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.about-page .director-title {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.about-page .director-subtitle {
+    color: #e23b31;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 22px;
+}
+
+.about-page .director-text {
+    color: #444;
+    line-height: 1.7;
+    margin-bottom: 16px;
+}
+
+.about-page .director-sign {
+    margin-top: 18px;
+}
+.about-page .director-name {
+    font-weight: 700;
+    font-size: 18px;
+}
+.about-page .director-role {
+    color: #777;
+}
+.about-page section {
+    position: relative;
+    z-index: 2;
+}
+
+/* ============================================================
+   TESTIMONIALS
+=============================================================== */
+.about-page .testimonials-section {
+    padding: 60px 0 80px;
+}
+
+.about-page .testimonials-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 50px;
+    align-items: center;
+}
+
+.about-page .testimonials-left {
+    position: relative;
+}
+
+.about-page .rating-badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #fff;
+    padding: 12px 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.about-page .js-rating-number {
+    font-size: 26px;
+    font-weight: 800;
+    color: #e23b31;
+}
+.about-page .rating-label {
+    font-size: 13px;
+    color: #444;
+}
+
+.about-page .testimonials-img {
+    width: 100%;
+    border-radius: 20px;
+    object-fit: cover;
+    display: block;
+}
+
+.about-page .testimonials-right {
+    padding-top: 15px;
+}
+
+.about-page .test-eyebrow {
+    text-transform: uppercase;
+    color: #e23b31;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.about-page .test-title {
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+.about-page .test-title span {
+    color: #e23b31;
+}
+
+.about-page .test-stars {
+    color: #e23b31;
+    font-size: 20px;
+    margin-bottom: 22px;
+    letter-spacing: 2px;
+}
+
+.about-page .test-quote {
+    font-size: 18px;
+    color: #333;
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
+
+.about-page .test-person {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.about-page .test-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #fdecec;
+    color: #e23b31;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 19px;
+}
+
+.about-page .test-name {
+    font-weight: 700;
+}
+.about-page .test-role {
+    color: #777;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.about-page .test-dots {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+}
+.about-page .test-dots button {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    transition: .25s;
+}
+.about-page .test-dots button.active {
+    background: #e23b31;
+    transform: scale(1.2);
+}
+
+/* ============================================================
+   QUI SOMMES-NOUS ?
+=============================================================== */
+.about-page .about-presentation {
+    padding: 70px 0 90px;
+}
+
+.about-page .section-eyebrow {
+    text-transform: uppercase;
+    color: #e23b31;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.about-page .section-title {
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.about-page .section-text {
+    font-size: 17px;
+    color: #444;
+    line-height: 1.7;
+    margin-bottom: 18px;
+}
+
+.about-page .mb-40 {
+    margin-bottom: 40px;
+}
+
+.about-page .about-filiales {
+    margin-top: 35px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.about-page .filiale-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 22px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.05);
+}
+
+.about-page .filiale-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fdecec;
+    color: #e23b31;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.about-page .filiale-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.about-page .filiale-desc {
+    color: #555;
+    font-size: 14px;
+}
+
+/* ============================================================
+   POURQUOI CHOISIR ?
+=============================================================== */
+.about-page .why-section {
+    padding: 80px 0 120px;
+}
+
+.about-page .why-grid {
+    margin-top: 45px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px;
+}
+
+.about-page .why-card {
+    background: #fff;
+    padding: 24px 26px;
+    border-radius: 18px;
+    box-shadow: 0 16px 30px rgba(0,0,0,0.06);
+}
+
+.about-page .why-icon img {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 14px;
+}
+
+.about-page .why-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.about-page .why-desc {
+    color: #555;
+    font-size: 14px;
+}
+
+/* ============================================================
+   SCROLL REVEAL
+=============================================================== */
+.about-page [data-animate] {
+    opacity: 1;
+    transform: none;
+    transition: opacity .65s ease, transform .65s ease;
+}
+.about-page [data-animate].visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ============================================================
+   RESPONSIVE FIXES
+=============================================================== */
+@media (max-width: 1200px) {
+    .about-page .about-hero {
+      height: calc(100vh - 108px); /* full viewport minus topbar + navbar */
+        padding: 60px 40px 60px;
+        background-position: center center;
+    }
+
+    .about-page .about-hero-inner {
+        max-width: 100%;
+        padding: 60px 20px;
+        text-align: center;
+        transform: translateX(0);
+        margin: 0 auto;
+    }
+
+    .about-page .about-hero-title {
+        font-size: 44px;
+        line-height: 1.2;
+    }
+
+    .about-page .about-hero-subtitle {
+        font-size: 16px;
+        margin-bottom: 24px;
+    }
+
+    .about-page .about-hero-buttons {
+        flex-direction: column;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Hero & Director */
+    .about-page .about-hero {
+        padding: 50px 20px 50px;
+        background-size: cover;
+    }
+    .about-page .director-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    .about-page .director-img-wrapper {
+        margin: 0 auto;
+    }
+
+    /* Testimonials */
+    .about-page .testimonials-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .about-page .testimonials-right {
+        padding-top: 0;
+    }
+
+    /* Why section */
+    .about-page .why-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .about-page .about-hero-title {
+        font-size: 36px;
+    }
+    .about-page .about-hero-subtitle {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .about-page .about-hero {
+        padding: 40px 15px 40px;
+    }
+    .about-page .about-hero-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .about-page .director-card {
+        padding: 25px 15px;
+    }
+
+    .about-page .director-img {
+        width: 100%;
+        height: auto;
+    }
+
+    .about-page .filiale-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
