@@ -9,6 +9,37 @@
   @stack('styles')
 </head>
 <body class="admin-body">
+  @php
+    $hasClientAlertsTable = \Illuminate\Support\Facades\Schema::hasTable('client_request_alerts');
+    $sidebarPendingClientRequests = \App\Models\RecruitmentRequest::query()
+      ->whereNotNull('client_user_id')
+      ->whereNull('admin_seen_at')
+      ->count();
+
+    $sidebarClientAlerts = $hasClientAlertsTable
+      ? \App\Models\ClientRequestAlert::query()->whereNull('admin_seen_at')->count()
+      : 0;
+
+    $sidebarUnreadApplications = \App\Models\JobApplication::query()
+      ->whereNull('admin_seen_at')
+      ->count();
+
+    $sidebarPendingUsers = \App\Models\User::query()
+      ->where('status', \App\Models\User::STATUS_PENDING)
+      ->count();
+
+    $sidebarNewEmployeeReports = \App\Models\EmployeeReport::query()
+      ->whereNull('admin_seen_at')
+      ->count();
+
+    $sidebarPendingLeaveRequests = \App\Models\EmployeeLeaveRequest::query()
+      ->whereNull('admin_seen_at')
+      ->count();
+
+    $sidebarUnreadEmployeeInternalRequests = \App\Models\EmployeeInternalRequest::query()
+      ->whereNull('admin_seen_at')
+      ->count();
+  @endphp
 
   <aside class="admin-sidebar">
 
@@ -39,6 +70,87 @@
         Dashboard
       </a>
 
+      <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}">
+        <span class="admin-ico">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M16 11c1.66 0 3-1.57 3-3.5S17.66 4 16 4s-3 1.57-3 3.5S14.34 11 16 11Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 10C9.66 10 11 8.66 11 7S9.66 4 8 4 5 5.34 5 7s1.34 3 3 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 20v-1a4 4 0 0 1 4-4h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        Utilisateurs
+        @if($sidebarPendingUsers > 0)
+          <span class="admin-nav-badge">{{ $sidebarPendingUsers }}</span>
+        @endif
+      </a>
+
+      <a href="{{ route('admin.client-recruitment-requests.index') }}" class="{{ request()->routeIs('admin.client-recruitment-requests.*') ? 'is-active' : '' }}">
+        <span class="admin-ico">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 3h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M6 7h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Demandes clients
+        @if($sidebarPendingClientRequests > 0)
+          <span class="admin-nav-badge">{{ $sidebarPendingClientRequests }}</span>
+        @endif
+      </a>
+
+      <a href="{{ route('admin.client-request-alerts.index') }}" class="{{ request()->routeIs('admin.client-request-alerts.*') ? 'is-active' : '' }}">
+        <span class="admin-ico">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 5h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 10h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Relances clients
+        @if($sidebarClientAlerts > 0)
+          <span class="admin-nav-badge">{{ $sidebarClientAlerts }}</span>
+        @endif
+      </a>
+
+      <a href="{{ route('admin.employee-reports.index') }}" class="{{ request()->routeIs('admin.employee-reports.*') ? 'is-active' : '' }}">
+        <span class="admin-ico">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 9h6M9 13h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Rapports employes
+        @if($sidebarNewEmployeeReports > 0)
+          <span class="admin-nav-badge">{{ $sidebarNewEmployeeReports }}</span>
+        @endif
+      </a>
+
+      <a href="{{ route('admin.employee-leave-requests.index') }}" class="{{ request()->routeIs('admin.employee-leave-requests.*') ? 'is-active' : '' }}">
+        <span class="admin-ico">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M9 14l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        Conges employes
+        @if($sidebarPendingLeaveRequests > 0)
+          <span class="admin-nav-badge">{{ $sidebarPendingLeaveRequests }}</span>
+        @endif
+      </a>
+
+      <a href="{{ route('admin.employee-internal-requests.index') }}" class="{{ request()->routeIs('admin.employee-internal-requests.*') ? 'is-active' : '' }}">
+        <span class="admin-ico">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 14c0 1.1-.9 2-2 2H8l-5 4V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v9Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        Requetes internes
+        @if($sidebarUnreadEmployeeInternalRequests > 0)
+          <span class="admin-nav-badge">{{ $sidebarUnreadEmployeeInternalRequests }}</span>
+        @endif
+      </a>
+
       <a href="{{ route('admin.offers.index') }}" class="{{ request()->routeIs('admin.offers.*') ? 'is-active' : '' }}">
         <span class="admin-ico">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -60,6 +172,9 @@
           </svg>
         </span>
         Candidatures
+        @if($sidebarUnreadApplications > 0)
+          <span class="admin-nav-badge">{{ $sidebarUnreadApplications }}</span>
+        @endif
       </a>
 
       <a href="{{ route('admin.cvs.index') }}" class="{{ request()->routeIs('admin.cvs.*') ? 'is-active' : '' }}">

@@ -242,6 +242,16 @@ Créer une demande et lancer l’analyse intelligente des CV
   </div>
 
   <div class="panel-body">
+    @if(!empty($sourceClientRequest))
+      <div class="admin-alert" style="margin-bottom:24px; border-color:rgba(239,68,68,.18); background:rgba(239,68,68,.06); color:#7f1d1d;">
+        <div class="admin-alert-title">Demande client connectee</div>
+        <div>
+          Vous lancez le matching depuis la demande client
+          <strong>{{ $sourceClientRequest->reference ?: '#' . $sourceClientRequest->id }}</strong>
+          pour le poste <strong>{{ $sourceClientRequest->position_title }}</strong>.
+        </div>
+      </div>
+    @endif
 
     <div class="panel" style="margin-bottom: 24px;">
       <div class="panel-head">
@@ -251,6 +261,9 @@ Créer une demande et lancer l’analyse intelligente des CV
       <div class="panel-body">
         <form action="{{ route('admin.recruitment-requests.import-docx') }}" method="POST" enctype="multipart/form-data" class="form">
           @csrf
+          @if(!empty($sourceClientRequest))
+            <input type="hidden" name="source_client_request_id" value="{{ $sourceClientRequest->id }}">
+          @endif
 
           <div class="form-field full">
             <label for="docx_file">Fichier Word (.docx)</label>
@@ -313,6 +326,9 @@ Créer une demande et lancer l’analyse intelligente des CV
           action="{{ route('admin.recruitment_requests.store') }}"
           class="form">
       @csrf
+      @if(!empty($sourceClientRequest))
+        <input type="hidden" name="source_client_request_id" value="{{ $sourceClientRequest->id }}">
+      @endif
 
       @include('admin.recruitment_requests._form', [
         'request' => $request ?? null

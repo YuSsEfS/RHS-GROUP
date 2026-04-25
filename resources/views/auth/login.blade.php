@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <link rel="icon" href="{{ asset('images/ChatGPT%20Image%20Jan%2015%2C%202026%2C%2009_50_56%20PM.png') }}" type="image/png">
-  <title>Administration RHS — Connexion</title>
+  <title>Espace privé RHS — Connexion</title>
 
   {{-- Fonts --}}
   <link rel="preconnect" href="https://fonts.bunny.net">
@@ -332,11 +332,11 @@ url('/images/premium-round-golden-frame-red-background-design_1017-54880.avif');
               <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
             </svg>
           </span>
-          RHS Admin
+          RHS Private Access
         </div>
 
-        <h1>Administration RHS</h1>
-        <p class="sub">Accès sécurisé à l’espace administrateur</p>
+        <h1>Espace privé RHS</h1>
+        <p class="sub">Accès sécurisé pour les comptes internes et les utilisateurs approuvés</p>
       </div>
 
       {{-- Session status --}}
@@ -379,7 +379,7 @@ url('/images/premium-round-golden-frame-red-background-design_1017-54880.avif');
               required
               autofocus
               autocomplete="username"
-              placeholder="admin@rhs-group.ma"
+              placeholder="votre.email@rhs-group.ma"
             >
           </div>
         </div>
@@ -429,7 +429,7 @@ url('/images/premium-round-golden-frame-red-background-design_1017-54880.avif');
         </button>
 
         <div class="divider">
-          RHS GROUP • Administration interne • Accès restreint
+          RHS GROUP • Accès privé • Accès restreint
         </div>
       </form>
 
@@ -440,7 +440,7 @@ url('/images/premium-round-golden-frame-red-background-design_1017-54880.avif');
       <div class="right-overlay"></div>
 
       <div class="right-text">
-        <h2>Bienvenue sur votre espace RH</h2>
+        <h2>Bienvenue sur votre espace privé RHS</h2>
         <p>
           Gérez vos ressources humaines avec efficacité et sécurité grâce à notre plateforme dédiée.
         </p>

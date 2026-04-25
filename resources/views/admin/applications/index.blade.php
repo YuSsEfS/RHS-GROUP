@@ -39,13 +39,13 @@ placeholder="Rechercher (nom, email ou ville)..."
             <div id="appsSuggest" class="search-suggest" hidden></div>
           </div>
 
-          {{-- FILTER: READ STATUS --}}
+          {{-- FILTER: CONSULTATION STATUS --}}
           <div class="table-filter">
-            <label for="status" class="sr-only">Statut</label>
+            <label for="status" class="sr-only">Consultation</label>
             <select name="status" id="status">
-              <option value="all" {{ request('status','all') === 'all' ? 'selected' : '' }}>Tous</option>
-              <option value="unread" {{ request('status') === 'unread' ? 'selected' : '' }}>Non lus</option>
-              <option value="read" {{ request('status') === 'read' ? 'selected' : '' }}>Lus</option>
+              <option value="all" {{ request('status','all') === 'all' ? 'selected' : '' }}>Toutes</option>
+              <option value="unread" {{ request('status') === 'unread' ? 'selected' : '' }}>Non consultees</option>
+              <option value="read" {{ request('status') === 'read' ? 'selected' : '' }}>Consultees</option>
             </select>
           </div>
 
@@ -80,7 +80,7 @@ placeholder="Rechercher (nom, email ou ville)..."
             <th>Candidat</th>
             <th>Email</th>
             <th>Offre</th>
-            <th>Statut</th>
+            <th>Consultation</th>
             <th class="th-actions">Action</th>
           </tr>
         </thead>
@@ -108,9 +108,9 @@ placeholder="Rechercher (nom, email ou ville)..."
 
               <td>
                 @if($a->is_read)
-                  <span class="pill pill-success">Lu</span>
+                  <span class="pill pill-success">Consultee</span>
                 @else
-                  <span class="pill pill-danger">Non lu</span>
+                  <span class="pill pill-danger">Non consultee</span>
                 @endif
               </td>
 

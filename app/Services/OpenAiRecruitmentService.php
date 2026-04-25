@@ -6,23 +6,38 @@ use Illuminate\Support\Facades\Log;
 
 class OpenAiRecruitmentService
 {
-    protected $client;
+    protected $client = null;
     protected string $model;
+    protected bool $configured = false;
 
     public function __construct()
     {
         $apiKey = config('services.openai.api_key');
+        $this->model = (string) config('services.openai.model', env('OPENAI_MODEL', 'gpt-4o-mini'));
 
         if (!$apiKey) {
-            throw new \RuntimeException('OPENAI_API_KEY manquante.');
+            Log::info('OpenAI disabled for recruitment services: missing API key.', [
+                'model' => $this->model,
+            ]);
+
+            return;
         }
 
         $this->client = \OpenAI::client($apiKey);
-        $this->model = env('OPENAI_MODEL', 'gpt-4o-mini');
+        $this->configured = true;
+    }
+
+    public function isConfigured(): bool
+    {
+        return $this->configured;
     }
 
     public function normalizeRequest(array $requestData): array
     {
+        if (!$this->configured) {
+            return [];
+        }
+
         return $this->callWithRetry(function () use ($requestData) {
             $messages = [
                 [
@@ -57,6 +72,10 @@ TXT
 
     public function structureCv(string $cvText): array
     {
+        if (!$this->configured || trim($cvText) === '') {
+            return [];
+        }
+
         return $this->callWithRetry(function () use ($cvText) {
             $messages = [
                 [

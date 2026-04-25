@@ -17,7 +17,13 @@ class JobApplication extends Model
         'cv_path',
         'letter_path',
         'message',
-        'is_read'
+        'is_read',
+        'admin_seen_at',
+    ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
+        'admin_seen_at' => 'datetime',
     ];
 
     public function offer()

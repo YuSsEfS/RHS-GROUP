@@ -6,19 +6,25 @@ use Illuminate\Support\Facades\Log;
 
 class AiFinalCvScoringService
 {
-    protected $client;
+    protected $client = null;
     protected string $model;
+    protected bool $configured = false;
 
     public function __construct()
     {
         $apiKey = config('services.openai.api_key');
+        $this->model = (string) config('services.openai.model', env('OPENAI_MODEL', 'gpt-4o-mini'));
 
         if (!$apiKey) {
-            throw new \RuntimeException('OPENAI_API_KEY manquante.');
+            Log::info('OpenAI disabled for final CV scoring: missing API key.', [
+                'model' => $this->model,
+            ]);
+
+            return;
         }
 
         $this->client = \OpenAI::client($apiKey);
-        $this->model = env('OPENAI_MODEL', 'gpt-4o-mini');
+        $this->configured = true;
     }
 
     public function score(
@@ -28,6 +34,20 @@ class AiFinalCvScoringService
         array $localBreakdown = [],
         string $localSummary = ''
     ): array {
+        if (!$this->configured) {
+            $estimatedAiScore = $this->estimateAiLikeScore($localScore, $localBreakdown);
+
+            return [
+                'score' => round(($localScore * 0.7) + ($estimatedAiScore * 0.3), 2),
+                'local_score' => round($localScore, 2),
+                'ai_score' => round($estimatedAiScore, 2),
+                'breakdown' => $this->normalizeBreakdown($this->mapLocalBreakdown($localBreakdown)),
+                'summary' => $this->fallbackSummary($localSummary, $localScore, $estimatedAiScore),
+                'ai_available' => false,
+                'failure_reason' => 'openai_not_configured',
+            ];
+        }
+
         $attempts = 4;
         $lastException = null;
 
@@ -37,9 +57,9 @@ class AiFinalCvScoringService
                     [
                         'role' => 'system',
                         'content' => <<<TXT
-Tu es un évaluateur RH expert.
+Tu es un evaluateur RH expert.
 
-Analyse l’adéquation entre une demande de recrutement et un candidat.
+Analyse l adequation entre une demande de recrutement et un candidat.
 
 Retourne uniquement un JSON valide avec cette structure exacte :
 {
@@ -54,12 +74,20 @@ Retourne uniquement un JSON valide avec cette structure exacte :
     "availability_fit": 0,
     "overall_consistency": 0
   },
-  "summary": ""
+  "summary": {
+    "resume_profil": "",
+    "points_forts": [],
+    "points_vigilance": [],
+    "adequation_poste": "",
+    "recommandation_finale": ""
+  }
 }
 
-Règles :
+Regles :
 - score entre 0 et 100
-- résumé court en français
+- style professionnel RH
+- formulations courtes et concretes
+- pas de marketing ni de formule generique
 - pas de texte hors JSON
 TXT
                     ],
@@ -85,7 +113,7 @@ TXT
                 $data = $this->extractJson($content);
 
                 if (!is_array($data)) {
-                    throw new \RuntimeException('Réponse IA invalide: ' . $content);
+                    throw new \RuntimeException('Reponse IA invalide: ' . $content);
                 }
 
                 $aiScore = max(0, min(100, (float) ($data['score'] ?? $localScore)));
@@ -100,7 +128,7 @@ TXT
                             ? $data['breakdown']
                             : $this->mapLocalBreakdown($localBreakdown)
                     ),
-                    'summary' => (string) ($data['summary'] ?? 'Analyse IA effectuée.'),
+                    'summary' => $this->formatSummarySections($data['summary'] ?? null, $localSummary),
                     'ai_available' => true,
                     'failure_reason' => null,
                 ];
@@ -118,7 +146,7 @@ TXT
                     || str_contains(mb_strtolower($e->getMessage()), 'too many requests');
 
                 if ($isRateLimit && $try < $attempts) {
-                    sleep(2 ** $try); // 2s, 4s, 8s
+                    sleep(2 ** $try);
                     continue;
                 }
 
@@ -138,9 +166,7 @@ TXT
             'local_score' => round($localScore, 2),
             'ai_score' => round($estimatedAiScore, 2),
             'breakdown' => $this->normalizeBreakdown($this->mapLocalBreakdown($localBreakdown)),
-            'summary' => $localSummary !== ''
-                ? $localSummary . ' (Matching avancé calculé automatiquement.)'
-                : 'Matching avancé calculé automatiquement.',
+            'summary' => $this->fallbackSummary($localSummary, $localScore, $estimatedAiScore),
             'ai_available' => false,
             'failure_reason' => $lastException?->getMessage(),
         ];
@@ -158,11 +184,21 @@ TXT
         $skillsTotal = $must + $nice;
 
         $bonus = 0;
-        if ($title >= 14) $bonus += 4;
-        if ($experience >= 12) $bonus += 4;
-        if ($skillsTotal >= 16) $bonus += 6;
-        if ($education >= 6) $bonus += 2;
-        if ($languages >= 4) $bonus += 2;
+        if ($title >= 14) {
+            $bonus += 4;
+        }
+        if ($experience >= 12) {
+            $bonus += 4;
+        }
+        if ($skillsTotal >= 16) {
+            $bonus += 6;
+        }
+        if ($education >= 6) {
+            $bonus += 2;
+        }
+        if ($languages >= 4) {
+            $bonus += 2;
+        }
 
         return max(0, min(100, round($localScore + $bonus, 2)));
     }
@@ -262,5 +298,61 @@ TXT
         }
 
         return $out;
+    }
+
+    private function fallbackSummary(string $localSummary, float $localScore, float $estimatedAiScore): string
+    {
+        $adequation = round(($localScore + $estimatedAiScore) / 2, 1);
+
+        return trim(implode("\n", [
+            'Resume du profil: analyse locale disponible en attendant l analyse IA.',
+            'Points forts: score local ' . round($localScore, 1) . '/100.',
+            'Points de vigilance: validation humaine recommandee pour confirmer l adequation detaillee.',
+            'Adequation avec le poste: estimation actuelle ' . $adequation . '/100.',
+            'Recommandation finale: poursuivre l evaluation RH si le contexte metier reste pertinent.',
+        ]));
+    }
+
+    private function formatSummarySections($summary, string $fallback): string
+    {
+        if (is_string($summary) && trim($summary) !== '') {
+            return trim($summary);
+        }
+
+        if (!is_array($summary)) {
+            return $fallback !== '' ? $fallback : 'Analyse IA realisee.';
+        }
+
+        $lines = [];
+
+        $resume = trim((string) ($summary['resume_profil'] ?? ''));
+        $strengths = array_filter((array) ($summary['points_forts'] ?? []));
+        $warnings = array_filter((array) ($summary['points_vigilance'] ?? []));
+        $adequation = trim((string) ($summary['adequation_poste'] ?? ''));
+        $recommendation = trim((string) ($summary['recommandation_finale'] ?? ''));
+
+        if ($resume !== '') {
+            $lines[] = 'Resume du profil: ' . $resume;
+        }
+
+        if (!empty($strengths)) {
+            $lines[] = 'Points forts: ' . implode(', ', $strengths) . '.';
+        }
+
+        if (!empty($warnings)) {
+            $lines[] = 'Points de vigilance: ' . implode(', ', $warnings) . '.';
+        }
+
+        if ($adequation !== '') {
+            $lines[] = 'Adequation avec le poste: ' . $adequation;
+        }
+
+        if ($recommendation !== '') {
+            $lines[] = 'Recommandation finale: ' . $recommendation;
+        }
+
+        return empty($lines)
+            ? ($fallback !== '' ? $fallback : 'Analyse IA realisee.')
+            : implode("\n", $lines);
     }
 }

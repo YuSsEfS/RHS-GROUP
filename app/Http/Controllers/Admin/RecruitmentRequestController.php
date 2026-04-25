@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Jobs\AnalyzeCvMatchWithAiJob;
+use App\Jobs\ScoreRecruitmentRequestMatchesJob;
 use App\Http\Controllers\Controller;
 use App\Models\Cv;
 use App\Models\CvFolder;
@@ -9,20 +11,30 @@ use App\Models\CvMatch;
 use App\Models\JobApplication;
 use App\Models\JobOffer;
 use App\Models\RecruitmentRequest;
-use App\Services\AiFinalCvScoringService;
-use App\Services\LocalCvScoringService;
 use App\Services\OpenAiRecruitmentService;
 use App\Services\RecruitmentRequestDocxImporter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use PhpOffice\PhpWord\IOFactory;
-use Smalot\PdfParser\Parser as PdfParser;
 
 class RecruitmentRequestController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
+        $sourceClientRequest = null;
+        $requestData = null;
+
+        if ($request->filled('client_request')) {
+            $sourceClientRequest = RecruitmentRequest::query()
+                ->whereKey((int) $request->integer('client_request'))
+                ->whereNotNull('client_user_id')
+                ->first();
+
+            abort_unless($sourceClientRequest, 404);
+            $requestData = $sourceClientRequest;
+        }
+
         $offers = JobOffer::query()
             ->select('id', 'title')
             ->orderBy('title')
@@ -34,10 +46,11 @@ class RecruitmentRequestController extends Controller
             ->get();
 
         return view('admin.recruitment_requests.create', [
-            'request' => null,
+            'request' => $requestData,
             'importedText' => null,
             'offers' => $offers,
             'folders' => $folders,
+            'sourceClientRequest' => $sourceClientRequest,
         ]);
     }
 
@@ -45,9 +58,18 @@ class RecruitmentRequestController extends Controller
     {
         $request->validate([
             'docx_file' => ['required', 'file', 'mimes:docx'],
+            'source_client_request_id' => ['nullable', 'integer', 'exists:recruitment_requests,id'],
         ]);
 
         $result = $importer->import($request->file('docx_file')->getPathname());
+        $sourceClientRequest = null;
+
+        if ($request->filled('source_client_request_id')) {
+            $sourceClientRequest = RecruitmentRequest::query()
+                ->whereKey((int) $request->integer('source_client_request_id'))
+                ->whereNotNull('client_user_id')
+                ->first();
+        }
 
         $offers = JobOffer::query()
             ->select('id', 'title')
@@ -64,14 +86,13 @@ class RecruitmentRequestController extends Controller
             'importedText' => $result['raw_text'] ?? null,
             'offers' => $offers,
             'folders' => $folders,
+            'sourceClientRequest' => $sourceClientRequest,
         ]);
     }
 
     public function store(
         Request $request,
-        OpenAiRecruitmentService $ai,
-        LocalCvScoringService $localScorer,
-        AiFinalCvScoringService $aiFinalScorer
+        OpenAiRecruitmentService $ai
     ) {
         @set_time_limit(600);
         @ini_set('memory_limit', '1024M');
@@ -139,6 +160,7 @@ class RecruitmentRequestController extends Controller
         }
 
         $validator = \Validator::make($input, [
+            'source_client_request_id' => ['nullable', 'integer', 'exists:recruitment_requests,id'],
             'job_offer_id' => ['nullable', 'exists:job_offers,id'],
             'cv_folder_id' => ['nullable', 'exists:cv_folders,id'],
 
@@ -179,6 +201,12 @@ class RecruitmentRequestController extends Controller
         $validated['lang_fr'] = $request->boolean('lang_fr');
         $validated['lang_en'] = $request->boolean('lang_en');
         $validated['lang_es'] = $request->boolean('lang_es');
+
+        $sourceClientRequestId = !empty($validated['source_client_request_id'])
+            ? (int) $validated['source_client_request_id']
+            : null;
+
+        unset($validated['source_client_request_id']);
 
         $selectedFolderId = !empty($validated['cv_folder_id'])
             ? (int) $validated['cv_folder_id']
@@ -259,60 +287,29 @@ class RecruitmentRequestController extends Controller
             unset($createData['work_locations']);
         }
 
-        $recruitmentRequest = RecruitmentRequest::create($createData);
+        $sourceClientRequest = null;
 
-        $cvs = $this->getTargetCvs(
-            $validated['job_offer_id'] ?? null,
-            $selectedFolderId
-        );
-
-        $localResults = [];
-
-        foreach ($cvs as $cv) {
-            $profile = $cv->structured_profile;
-
-            if (is_string($profile)) {
-                $decoded = json_decode($profile, true);
-                $profile = is_array($decoded) ? $decoded : [];
-            }
-
-            if (!is_array($profile)) {
-                $profile = [];
-            }
-
-            $profile = $this->enrichProfileForScoring($cv, $profile);
-
-            $scoreData = $localScorer->score($normalized, $profile);
-
-            $localResults[] = [
-                'cv' => $cv,
-                'profile' => $profile,
-                'scoreData' => $scoreData,
-            ];
+        if ($sourceClientRequestId) {
+            $sourceClientRequest = RecruitmentRequest::query()
+                ->whereKey($sourceClientRequestId)
+                ->whereNotNull('client_user_id')
+                ->first();
         }
 
-        usort($localResults, function ($a, $b) {
-            return ($b['scoreData']['score'] ?? 0) <=> ($a['scoreData']['score'] ?? 0);
-        });
+        if ($sourceClientRequest) {
+            $sourceClientRequest->fill($createData);
+            $sourceClientRequest->request_status = RecruitmentRequest::STATUS_MATCHING_IN_PROGRESS;
+            $sourceClientRequest->admin_seen_at = now();
+            $sourceClientRequest->save();
 
-        foreach ($localResults as $item) {
-            $cv = $item['cv'];
-            $local = $item['scoreData'];
-            $final = $this->formatLocalResult($local);
-
-            CvMatch::updateOrCreate(
-                [
-                    'recruitment_request_id' => $recruitmentRequest->id,
-                    'cv_id' => $cv->id,
-                ],
-                [
-                    'score' => $final['score'] ?? 0,
-                    'score_breakdown' => $final['breakdown'] ?? [],
-                    'summary' => $final['summary'] ?? '',
-                    'selected' => false,
-                ]
-            );
+            $recruitmentRequest = $sourceClientRequest;
+        } else {
+            $recruitmentRequest = RecruitmentRequest::create($createData);
         }
+        Bus::dispatchSync(new ScoreRecruitmentRequestMatchesJob(
+            recruitmentRequestId: $recruitmentRequest->id,
+            folderId: $selectedFolderId,
+        ));
 
         return redirect()
             ->route('admin.recruitment_requests.results', [
@@ -377,83 +374,15 @@ class RecruitmentRequestController extends Controller
 
     public function analyzeWithAi(
         Request $request,
-        CvMatch $match,
-        LocalCvScoringService $localScorer,
-        AiFinalCvScoringService $aiFinalScorer
+        CvMatch $match
     ) {
-        $match->loadMissing(['recruitmentRequest', 'cv']);
-
+        $result = Bus::dispatchSync(new AnalyzeCvMatchWithAiJob($match->id));
+        $match->loadMissing('recruitmentRequest');
         $recruitmentRequest = $match->recruitmentRequest;
-        $cv = $match->cv;
 
-        if (!$recruitmentRequest || !$cv) {
-            return back()->with('error', 'Match introuvable.');
+        if (!$recruitmentRequest) {
+            return back()->with('error', $result['message'] ?? 'Match introuvable.');
         }
-
-        $requirements = $recruitmentRequest->ai_normalized_requirements;
-
-        if (is_string($requirements)) {
-            $decoded = json_decode($requirements, true);
-            $requirements = is_array($decoded) ? $decoded : [];
-        }
-
-        if (!is_array($requirements) || empty($requirements)) {
-            return redirect()
-                ->route('admin.recruitment_requests.results', $recruitmentRequest)
-                ->with('error', 'Les exigences du poste ne sont pas disponibles.');
-        }
-
-        $profile = $cv->structured_profile;
-
-        if (is_string($profile)) {
-            $decoded = json_decode($profile, true);
-            $profile = is_array($decoded) ? $decoded : [];
-        }
-
-        if (!is_array($profile) || empty($profile)) {
-            return redirect()
-                ->route('admin.recruitment_requests.results', $recruitmentRequest)
-                ->with('error', 'Le profil structuré du CV est introuvable.');
-        }
-
-        $profile = $this->enrichProfileForScoring($cv, $profile);
-
-        $local = $localScorer->score($requirements, $profile);
-
-        usleep(1500000);
-
-        $final = $aiFinalScorer->score(
-            $requirements,
-            $profile,
-            (float) ($local['score'] ?? 0),
-            (array) ($local['breakdown'] ?? []),
-            (string) ($local['summary'] ?? '')
-        );
-
-        $matchingIa = isset($final['ai_score']) && $final['ai_score'] !== null
-            ? round((float) $final['ai_score'], 2)
-            : null;
-
-        $newBreakdown = array_merge(
-            is_array($final['breakdown'] ?? null) ? $final['breakdown'] : [],
-            [
-                '_meta' => [
-                    'local_score' => round((float) ($final['local_score'] ?? $local['score'] ?? 0), 2),
-                    'ai_score' => $matchingIa,
-                    'final_score' => round((float) ($final['score'] ?? $match->score), 2),
-                    'ai_available' => (bool) ($final['ai_available'] ?? false),
-                    'last_analysis' => now()->format('Y-m-d H:i:s'),
-                ],
-            ]
-        );
-
-        $summary = $final['summary'] ?? $match->summary;
-
-        $match->update([
-            'score' => $final['score'] ?? $match->score,
-            'score_breakdown' => $newBreakdown,
-            'summary' => $summary,
-        ]);
 
         return redirect()
             ->route('admin.recruitment_requests.results', [
@@ -461,9 +390,7 @@ class RecruitmentRequestController extends Controller
                 'offer' => $recruitmentRequest->job_offer_id ?: 'all',
                 'folder' => request('folder', 'all'),
             ])
-            ->with('success', ($final['ai_available'] ?? false)
-                ? 'Analyse IA effectuée avec succès. Le score de matching a été mis à jour.'
-                : 'OpenAI est temporairement limité. Un matching avancé estimé localement a été appliqué avec succès.');
+            ->with(($result['success'] ?? false) ? 'success' : 'error', $result['message'] ?? 'Analyse indisponible.');
     }
 
     public function toggleSelection(Request $request, CvMatch $match)
@@ -473,187 +400,6 @@ class RecruitmentRequestController extends Controller
         ]);
 
         return back()->with('success', 'Sélection mise à jour.');
-    }
-
-    private function getTargetCvs($jobOfferId = null, ?int $folderId = null)
-{
-    $cvIds = collect();
-
-    /*
-    |--------------------------------------------------------------------------
-    | 1. Add CVs from selected folder
-    |--------------------------------------------------------------------------
-    */
-    if ($folderId && Schema::hasColumn('cvs', 'cv_folder_id')) {
-        $folderCvIds = Cv::query()
-            ->where('cv_folder_id', $folderId)
-            ->pluck('id');
-
-        $cvIds = $cvIds->merge($folderCvIds);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | 2. Add CVs from selected offer applications
-    |--------------------------------------------------------------------------
-    */
-    if (!empty($jobOfferId)) {
-        $applications = JobApplication::query()
-            ->where('job_offer_id', (int) $jobOfferId)
-            ->whereNotNull('cv_path')
-            ->get();
-
-        foreach ($applications as $application) {
-            $relativePath = ltrim((string) $application->cv_path, '/');
-
-            if ($relativePath === '') {
-                continue;
-            }
-
-            if (!Storage::disk('public')->exists($relativePath)) {
-                continue;
-            }
-
-            $binary = Storage::disk('public')->get($relativePath);
-            $hash = hash('sha256', $binary);
-
-            $existingCv = Cv::query()
-                ->where('file_hash', $hash)
-                ->first();
-
-            if ($existingCv) {
-                $cvIds->push($existingCv->id);
-            }
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | 3. If no offer and no folder selected, use all indexed CVs
-    |--------------------------------------------------------------------------
-    */
-    $query = Cv::query()
-        ->whereNotNull('structured_profile');
-
-    if ($cvIds->isNotEmpty()) {
-        $query->whereIn('id', $cvIds->unique()->values()->all());
-    } elseif (!empty($jobOfferId) || !empty($folderId)) {
-        $query->whereRaw('1 = 0');
-    }
-
-    return $query->orderByDesc('id')->get();
-}
-
-    private function enrichProfileForScoring(Cv $cv, array $profile): array
-    {
-        if (empty($profile['full_name']) && !empty($cv->candidate_name)) {
-            $profile['full_name'] = $cv->candidate_name;
-        }
-
-        if (empty($profile['email']) && !empty($cv->email)) {
-            $profile['email'] = $cv->email;
-        }
-
-        if (empty($profile['phone']) && !empty($cv->phone)) {
-            $profile['phone'] = $cv->phone;
-        }
-
-        if (empty($profile['city']) && !empty($cv->city)) {
-            $profile['city'] = $cv->city;
-        }
-
-        if (empty($profile['title']) && !empty($cv->current_title)) {
-            $profile['title'] = $cv->current_title;
-        }
-
-        $text = (string) (
-            $cv->encrypted_extracted_text
-            ?? data_get($profile, 'summary')
-            ?? ''
-        );
-
-        if (empty($profile['years_experience'])) {
-            $profile['years_experience'] = $this->estimateExperienceFromText($text);
-        }
-
-        if (empty($profile['age'])) {
-            $profile['age'] = $this->estimateAgeFromText($text);
-        }
-
-        return $profile;
-    }
-
-    private function estimateExperienceFromText(?string $text): ?float
-    {
-        $text = $this->normalizeWhitespace((string) $text);
-
-        if ($text === '') {
-            return null;
-        }
-
-        $norm = mb_strtolower($text, 'UTF-8');
-
-        $best = null;
-
-        if (preg_match_all('/(\d{4})\s*[-–—]\s*(\d{4}|present|presentement|présent|actuel|aujourd)/iu', $norm, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                $start = (int) $match[1];
-                $endRaw = $match[2];
-
-                $end = preg_match('/^\d{4}$/', $endRaw)
-                    ? (int) $endRaw
-                    : (int) date('Y');
-
-                if ($start >= 1970 && $start <= (int) date('Y') && $end >= $start) {
-                    $years = min(40, $end - $start);
-                    $best = max($best ?? 0, $years);
-                }
-            }
-        }
-
-        if (preg_match_all('/(\d+(?:[.,]\d+)?)\s*(?:ans|annees|années|year|years)\s+(?:d[’\'e ]experience|experience|expérience)/iu', $norm, $matches)) {
-            foreach ($matches[1] as $value) {
-                $best = max($best ?? 0, (float) str_replace(',', '.', $value));
-            }
-        }
-
-        return $best;
-    }
-
-    private function estimateAgeFromText(?string $text): ?int
-    {
-        $text = $this->normalizeWhitespace((string) $text);
-
-        if ($text === '') {
-            return null;
-        }
-
-        if (preg_match('/\b(\d{1,2})\s*(?:ans|years old|year old)\b/iu', $text, $m)) {
-            $age = (int) $m[1];
-
-            if ($age >= 16 && $age <= 70) {
-                return $age;
-            }
-        }
-
-        if (preg_match('/(?:né|nee|née|naissance|born).*?(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/iu', $text, $m)) {
-            $year = (int) $m[3];
-
-            if ($year >= 1950 && $year <= (int) date('Y')) {
-                return (int) date('Y') - $year;
-            }
-        }
-
-        if (preg_match('/\b(19[5-9]\d|20[0-1]\d)\b/u', $text, $m)) {
-            $year = (int) $m[1];
-            $age = (int) date('Y') - $year;
-
-            if ($age >= 16 && $age <= 70) {
-                return $age;
-            }
-        }
-
-        return null;
     }
 
     private function parseAgeRequirement(?string $value): array
@@ -757,39 +503,6 @@ class RecruitmentRequestController extends Controller
         return array_values(array_unique(array_filter($parts)));
     }
 
-    private function formatLocalResult(array $local): array
-    {
-        return [
-            'score' => (float) ($local['score'] ?? 0),
-            'breakdown' => [
-                'title_fit' => (float) (($local['breakdown']['title'] ?? 0)),
-                'education_fit' => (float) (($local['breakdown']['education'] ?? 0)),
-                'experience_fit' => (float) (($local['breakdown']['experience'] ?? 0)),
-                'skills_fit' => round(
-                    (float) (($local['breakdown']['must_have_skills'] ?? 0)) +
-                    (float) (($local['breakdown']['nice_to_have_skills'] ?? 0)),
-                    2
-                ),
-                'language_fit' => (float) (($local['breakdown']['languages'] ?? 0)),
-                'location_fit' => (float) (($local['breakdown']['location'] ?? 0)),
-                'availability_fit' => (float) (($local['breakdown']['availability'] ?? 0)),
-                'overall_consistency' => round(
-                    (float) (($local['breakdown']['soft_skills'] ?? 0)) +
-                    (float) (($local['breakdown']['consistency_bonus'] ?? 0)),
-                    2
-                ),
-                '_meta' => [
-                    'local_score' => round((float) ($local['score'] ?? 0), 2),
-                    'ai_score' => null,
-                    'final_score' => round((float) ($local['score'] ?? 0), 2),
-                    'ai_available' => false,
-                    'last_analysis' => null,
-                ],
-            ],
-            'summary' => (string) ($local['summary'] ?? 'Évaluation locale effectuée.'),
-        ];
-    }
-
     private function explodeFreeText(string $text): array
     {
         $parts = preg_split('/[,;\n\-•]+/u', $text);
@@ -819,98 +532,4 @@ class RecruitmentRequestController extends Controller
         return trim($value);
     }
 
-    private function syncExistingApplicationsToCvBank(OpenAiRecruitmentService $ai): void
-    {
-        $applications = JobApplication::query()
-            ->whereNotNull('cv_path')
-            ->get();
-
-        foreach ($applications as $application) {
-            $relativePath = ltrim($application->cv_path, '/');
-
-            if (!Storage::disk('public')->exists($relativePath)) {
-                continue;
-            }
-
-            $binary = Storage::disk('public')->get($relativePath);
-            $hash = hash('sha256', $binary);
-
-            if (Cv::where('file_hash', $hash)->exists()) {
-                continue;
-            }
-
-            $extension = strtolower(pathinfo($relativePath, PATHINFO_EXTENSION));
-            $tempPath = storage_path('app/temp_' . uniqid() . '.' . $extension);
-
-            file_put_contents($tempPath, $binary);
-
-            try {
-                $text = $this->extractTextFromFile($tempPath, $extension);
-                $profile = $ai->structureCv($text);
-
-                $storedPath = 'private/cvs/' . uniqid() . '.' . $extension;
-                Storage::disk('local')->put($storedPath, $binary);
-
-                Cv::create([
-                    'candidate_name' => $profile['full_name'] ?? $application->full_name ?? null,
-                    'email' => $profile['email'] ?? $application->email ?? null,
-                    'phone' => $profile['phone'] ?? $application->phone ?? null,
-                    'original_filename' => basename($relativePath),
-                    'mime_type' => $this->guessMimeTypeFromExtension($extension),
-                    'file_size' => strlen($binary),
-                    'encrypted_path' => $storedPath,
-                    'encrypted_extracted_text' => $text,
-                    'structured_profile' => $profile,
-                    'file_hash' => $hash,
-                    'uploaded_at' => now(),
-                ]);
-            } catch (\Throwable $e) {
-                //
-            } finally {
-                @unlink($tempPath);
-            }
-        }
-    }
-
-    private function extractTextFromFile(string $filePath, string $extension): string
-    {
-        if ($extension === 'pdf') {
-            $parser = new PdfParser();
-            $pdf = $parser->parseFile($filePath);
-
-            return trim($pdf->getText());
-        }
-
-        if (in_array($extension, ['doc', 'docx'])) {
-            $phpWord = IOFactory::load($filePath);
-            $text = '';
-
-            foreach ($phpWord->getSections() as $section) {
-                foreach ($section->getElements() as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
-                    }
-                }
-            }
-
-            return trim($text);
-        }
-
-        if ($extension === 'txt') {
-            return trim(file_get_contents($filePath));
-        }
-
-        return '';
-    }
-
-    private function guessMimeTypeFromExtension(string $extension): string
-    {
-        return match ($extension) {
-            'pdf' => 'application/pdf',
-            'doc' => 'application/msword',
-            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'txt' => 'text/plain',
-            default => 'application/octet-stream',
-        };
-    }
 }

@@ -2,17 +2,21 @@
 
 namespace App\Console\Commands;
 
+use App\Services\CvExtractionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use App\Models\JobApplication;
 use App\Models\Cv;
-use Smalot\PdfParser\Parser as PdfParser;
-use PhpOffice\PhpWord\IOFactory;
 
 class ImportOldJobApplicationCvs extends Command
 {
     protected $signature = 'cvs:import-old';
     protected $description = 'Import old CVs from job_applications into cvs table';
+
+    public function __construct(protected CvExtractionService $extraction)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -38,7 +42,7 @@ class ImportOldJobApplicationCvs extends Command
 
             try {
                 $binary = Storage::disk('public')->get($relativePath);
-                $hash = hash('sha256', $binary);
+                $hash = $this->extraction->hashBinary($binary);
 
                 if (Cv::where('file_hash', $hash)->exists()) {
                     $skipped++;
@@ -106,41 +110,7 @@ class ImportOldJobApplicationCvs extends Command
 
     private function safeExtractTextFromFile(string $filePath, string $extension): string
     {
-        try {
-            return $this->extractTextFromFile($filePath, $extension);
-        } catch (\Throwable $e) {
-            return '';
-        }
-    }
-
-    private function extractTextFromFile(string $filePath, string $extension): string
-    {
-        if ($extension === 'pdf') {
-            $parser = new PdfParser();
-            $pdf = $parser->parseFile($filePath);
-            return trim($pdf->getText());
-        }
-
-        if (in_array($extension, ['doc', 'docx'])) {
-            $phpWord = IOFactory::load($filePath);
-            $text = '';
-
-            foreach ($phpWord->getSections() as $section) {
-                foreach ($section->getElements() as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
-                    }
-                }
-            }
-
-            return trim($text);
-        }
-
-        if ($extension === 'txt') {
-            return trim(file_get_contents($filePath));
-        }
-
-        return '';
+        return $this->extraction->extractTextFromFile($filePath, $extension);
     }
 
     private function cleanUtf8($value): ?string

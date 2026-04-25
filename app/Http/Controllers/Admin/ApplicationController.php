@@ -44,6 +44,10 @@ class ApplicationController extends Controller
             ->latest()
 ->get();
 
+        JobApplication::query()
+            ->whereNull('admin_seen_at')
+            ->update(['admin_seen_at' => now()]);
+
 
         $offers = JobOffer::query()
             ->select('id', 'title')
@@ -94,9 +98,10 @@ class ApplicationController extends Controller
     {
         $application = JobApplication::with(['offer'])->findOrFail($id);
 
-        if (!$application->is_read) {
-            $application->is_read = true;
-            $application->save();
+        if (is_null($application->admin_seen_at)) {
+            $application->forceFill([
+                'admin_seen_at' => now(),
+            ])->save();
         }
 
         return view('admin.applications.show', compact('application'));

@@ -180,10 +180,24 @@ Classement des CV compatibles avec l’offre choisie
     </div>
 
     <div class="match-toolbar">
-      <div></div>
-      <a class="btn btn-primary" href="{{ route('admin.recruitment_requests.downloadSelected', $recruitmentRequest) }}">
-        Télécharger les CV sélectionnés
-      </a>
+      <div>
+        @if($recruitmentRequest->client_user_id)
+          <span class="meta">
+            <span class="meta-dot"></span>
+            Statut client: {{ \App\Models\RecruitmentRequest::availableStatuses()[$recruitmentRequest->request_status] ?? ucfirst(str_replace('_', ' ', $recruitmentRequest->request_status)) }}
+          </span>
+        @endif
+      </div>
+      <div class="table-ctrl-actions">
+        @if($recruitmentRequest->client_user_id)
+          <a class="btn btn-ghost" href="{{ route('admin.client-recruitment-requests.edit', $recruitmentRequest) }}">
+            Mettre a jour le statut client
+          </a>
+        @endif
+        <a class="btn btn-primary" href="{{ route('admin.recruitment_requests.downloadSelected', $recruitmentRequest) }}">
+          Télécharger les CV sélectionnés
+        </a>
+      </div>
     </div>
 
     <div class="table-wrap" style="margin-top:18px;">

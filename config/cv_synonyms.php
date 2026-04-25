@@ -504,6 +504,27 @@ return [
         'gestion du stress' => ['resistance au stress', 'stress management'],
         'resistance au stress' => ['gestion du stress'],
         'stress management' => ['gestion du stress'],
+
+        // =====================================================================
+        // MAROC / RHS / VOCABULAIRE RH CIBLE
+        // =====================================================================
+        'attestation de salaire' => ['salary certificate', 'attestation salariale'],
+        'attestation de travail' => ['work certificate', 'employment certificate'],
+        'charge import export' => ['import export officer', 'agent import export'],
+        'assistant transit et douane' => ['assistant transit', 'assistant douane'],
+        'gestionnaire paie' => ['payroll officer', 'gestionnaire de paie'],
+        'charge administration du personnel' => ['hr administration officer', 'administration du personnel'],
+        'responsable exploitation' => ['operations manager', 'manager exploitation'],
+        'technicien methodes' => ['method technician', 'industrial methods technician'],
+        'agent sav' => ['service apres vente', 'after sales agent'],
+        'charge recouvrement' => ['collections officer', 'credit controller'],
+        'assistante de direction' => ['executive assistant', 'office manager assistant'],
+        'gestionnaire parc auto' => ['fleet coordinator', 'fleet manager'],
+        'agent back office' => ['back office officer', 'gestion administrative'],
+        'responsable magasin' => ['warehouse supervisor', 'store manager'],
+        'technicien laboratoire' => ['lab technician', 'technicien de laboratoire'],
+        'commercial terrain' => ['field sales', 'outside sales'],
+        'coordinateur rh' => ['hr coordinator', 'coordonnateur rh'],
     ],
 
     /*

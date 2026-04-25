@@ -7,12 +7,16 @@ class LocalCvScoringService
     protected array $synonyms;
     protected array $titleFamilies;
     protected array $roleSiblings;
+    protected array $specificTitleTokens;
+    protected array $titleConflicts;
 
     public function __construct()
     {
         $this->synonyms = config('cv_synonyms.synonyms', []);
         $this->titleFamilies = config('cv_synonyms.title_families', []);
         $this->roleSiblings = config('cv_synonyms.role_siblings', []);
+        $this->specificTitleTokens = config('cv_synonyms.specific_title_tokens', []);
+        $this->titleConflicts = config('cv_synonyms.title_conflicts', []);
     }
 
     public function score(array $requirements, array $profile): array
@@ -318,6 +322,7 @@ class LocalCvScoringService
             'score' => $score,
             'breakdown' => $breakdown,
             'summary' => $summary,
+            'explanations' => $this->buildExplanations($breakdown, $weights, $reqRole, $reqExp, $cvExp, $reqLocations),
             'meta' => [
                 'raw_score' => round($rawScore, 2),
                 'max_score' => round($maxScore, 2),
@@ -468,14 +473,16 @@ class LocalCvScoringService
 
         $exactRole = $this->containsPhrase($candidate, $required) || $this->containsPhrase($pool, $required);
 
-        $familyBoost = $this->sameTitleFamily($required, $candidate, $pool) ? 0.16 : 0;
+        $familyBoost = $this->sameTitleFamily($required, $candidate, $pool) ? 0.12 : 0;
         $siblingPenalty = $this->isSiblingRole($required, $candidate, $pool) ? 0.25 : 0;
+        $specificPenalty = $this->specificTokenPenalty($required, $candidate, $pool);
+        $conflictPenalty = $this->sameConflictGroup($required, $candidate, $pool) ? 0 : 0.18;
 
         if ($exactRole) {
-            $direct = max($direct, 0.92);
+            $direct = max($direct, 0.96);
         }
 
-        return max(0, min(1, $direct + $familyBoost - $siblingPenalty));
+        return max(0, min(1, $direct + $familyBoost - $siblingPenalty - $specificPenalty - $conflictPenalty));
     }
 
     private function scoreEducationFit(string $required, string $candidate, string $pool): float
@@ -1021,5 +1028,101 @@ class LocalCvScoringService
             fn ($v) => $this->normalizeText((string) $v),
             $locations
         ))));
+    }
+
+    private function specificTokenPenalty(string $required, string $candidate, string $pool): float
+    {
+        $requiredTokens = $this->extractSpecificTitleTokens($required);
+
+        if (empty($requiredTokens)) {
+            return 0;
+        }
+
+        $haystack = $candidate . ' ' . $pool;
+        $misses = 0;
+
+        foreach ($requiredTokens as $token) {
+            if (!$this->containsPhrase($haystack, $token)) {
+                $misses++;
+            }
+        }
+
+        return min(0.22, $misses * 0.08);
+    }
+
+    private function extractSpecificTitleTokens(string $text): array
+    {
+        $normalized = $this->normalizeText($text);
+        $tokens = [];
+
+        foreach ($this->specificTitleTokens as $token) {
+            $token = $this->normalizeText((string) $token);
+
+            if ($token !== '' && $this->containsPhrase($normalized, $token)) {
+                $tokens[] = $token;
+            }
+        }
+
+        return array_values(array_unique($tokens));
+    }
+
+    private function sameConflictGroup(string $required, string $candidate, string $pool): bool
+    {
+        $haystack = $candidate . ' ' . $pool;
+
+        foreach ($this->titleConflicts as $groups) {
+            $requiredGroup = null;
+            $candidateGroup = null;
+
+            foreach ($groups as $groupName => $terms) {
+                foreach ($terms as $term) {
+                    $term = $this->normalizeText((string) $term);
+
+                    if ($term !== '' && $requiredGroup === null && $this->containsPhrase($required, $term)) {
+                        $requiredGroup = $groupName;
+                    }
+
+                    if ($term !== '' && $candidateGroup === null && $this->containsPhrase($haystack, $term)) {
+                        $candidateGroup = $groupName;
+                    }
+                }
+            }
+
+            if ($requiredGroup !== null) {
+                return $candidateGroup === null || $candidateGroup === $requiredGroup;
+            }
+        }
+
+        return true;
+    }
+
+    private function buildExplanations(array $breakdown, array $weights, string $reqRole, ?float $reqExp, ?float $cvExp, array $reqLocations): array
+    {
+        $explanations = [];
+
+        if ($reqRole !== '') {
+            $ratio = ($breakdown['title'] ?? 0) / max(1, ($weights['title'] ?? 1));
+            $explanations['title'] = $ratio >= 0.8
+                ? 'Intitule tres proche du besoin.'
+                : ($ratio >= 0.5 ? 'Intitule partiellement proche du besoin.' : 'Intitule trop eloigne ou trop generique.');
+        }
+
+        if (!is_null($reqExp)) {
+            $explanations['experience'] = is_null($cvExp)
+                ? 'Experience du candidat non detectee clairement.'
+                : 'Experience estimee a ' . round($cvExp, 1) . ' an(s) pour un besoin d environ ' . round($reqExp, 1) . ' an(s).';
+        }
+
+        if (!empty($reqLocations)) {
+            $explanations['location'] = (($breakdown['location'] ?? 0) > 0)
+                ? 'Localisation compatible ou proche du besoin.'
+                : 'Aucune localisation compatible detectee.';
+        }
+
+        $explanations['skills'] = (($breakdown['must_have_skills'] ?? 0) > ($weights['must_have_skills'] ?? 1) * 0.6)
+            ? 'Les competences essentielles sont bien representees.'
+            : 'Les competences essentielles ne sont que partiellement couvertes.';
+
+        return $explanations;
     }
 }

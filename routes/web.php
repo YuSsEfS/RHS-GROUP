@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
 
 use App\Http\Controllers\JobOfferController;
 use App\Http\Controllers\ContactFormController;
@@ -23,6 +24,21 @@ use App\Http\Controllers\Admin\RecruitmentRequestController;
 use App\Http\Controllers\Admin\CvDownloadController;
 use App\Http\Controllers\Admin\CvFolderController;
 use App\Http\Controllers\Admin\ExternalCvController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\ClientRecruitmentRequestController as AdminClientRecruitmentRequestController;
+use App\Http\Controllers\Admin\EmployeeReportController as AdminEmployeeReportController;
+use App\Http\Controllers\Admin\EmployeeLeaveRequestController as AdminEmployeeLeaveRequestController;
+use App\Http\Controllers\Admin\EmployeeInternalRequestController as AdminEmployeeInternalRequestController;
+use App\Http\Controllers\Admin\ClientRequestAlertController as AdminClientRequestAlertController;
+use App\Http\Controllers\Auth\ClientRegistrationController;
+use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
+use App\Http\Controllers\Employee\ReportController as EmployeeReportController;
+use App\Http\Controllers\Employee\LeaveRequestController as EmployeeLeaveRequestController;
+use App\Http\Controllers\Employee\InternalRequestController as EmployeeInternalRequestController;
+use App\Http\Controllers\Employee\ClientRequestAlertController as EmployeeClientRequestAlertController;
+use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
+use App\Http\Controllers\Client\ClientRequestAlertController as ClientClientRequestAlertController;
+use App\Http\Controllers\Client\RecruitmentRequestController as ClientRecruitmentRequestController;
 
 Route::redirect('/index2.html', '/', 301);
 Route::redirect('/old/documentation/index.html.bak.bak', '/', 301);
@@ -51,18 +67,47 @@ Route::view('/tawassol', 'pages.tawassol')->name('tawassol');
 Route::get('/postuler', [ApplicationFormController::class, 'create'])->name('apply');
 Route::post('/postuler', [ApplicationFormController::class, 'store'])->name('apply.store');
 
+Route::middleware('guest')->group(function () {
+    Route::get('/client/register', [ClientRegistrationController::class, 'create'])->name('client.register');
+    Route::post('/client/register', [ClientRegistrationController::class, 'store'])->name('client.register.store');
+});
+
 /*
 |--------------------------------------------------------------------------
 | DASHBOARD REDIRECT
 |--------------------------------------------------------------------------
 */
 Route::get('/dashboard', function () {
-    if (Auth::check() && Auth::user()->role === 'admin') {
+    $user = Auth::user();
+
+    if (!$user) {
+        return redirect()->route('home');
+    }
+
+    if (!$user->isApproved() && !$user->isAdmin()) {
+        return redirect()->route('account.pending');
+    }
+
+    if ($user->isAdmin()) {
         return redirect()->route('admin.dashboard');
+    }
+
+    if ($user->hasRole(User::ROLE_EMPLOYEE)) {
+        return redirect()->route('employee.dashboard');
+    }
+
+    if ($user->hasRole(User::ROLE_CLIENT)) {
+        return redirect()->route('client.dashboard');
     }
 
     return redirect()->route('home');
 })->middleware(['auth'])->name('dashboard');
+
+Route::get('/account/pending', function () {
+    return view('auth.account-pending', [
+        'user' => auth()->user(),
+    ]);
+})->middleware('auth')->name('account.pending');
 
 /*
 |--------------------------------------------------------------------------
@@ -126,6 +171,37 @@ Route::prefix('admin')
     ->group(function () {
 
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('users', AdminUserController::class)->except('show');
+        Route::get('/client-recruitment-requests', [AdminClientRecruitmentRequestController::class, 'index'])
+            ->name('client-recruitment-requests.index');
+        Route::get('/client-recruitment-requests/{clientRecruitmentRequest}/edit', [AdminClientRecruitmentRequestController::class, 'edit'])
+            ->name('client-recruitment-requests.edit');
+        Route::put('/client-recruitment-requests/{clientRecruitmentRequest}', [AdminClientRecruitmentRequestController::class, 'update'])
+            ->name('client-recruitment-requests.update');
+        Route::get('/client-request-alerts', [AdminClientRequestAlertController::class, 'index'])
+            ->name('client-request-alerts.index');
+        Route::get('/client-request-alerts/{clientRequestAlert}/edit', [AdminClientRequestAlertController::class, 'edit'])
+            ->name('client-request-alerts.edit');
+        Route::put('/client-request-alerts/{clientRequestAlert}', [AdminClientRequestAlertController::class, 'update'])
+            ->name('client-request-alerts.update');
+        Route::get('/employee-reports', [AdminEmployeeReportController::class, 'index'])
+            ->name('employee-reports.index');
+        Route::get('/employee-reports/{employeeReport}', [AdminEmployeeReportController::class, 'show'])
+            ->name('employee-reports.show');
+        Route::patch('/employee-reports/{employeeReport}/review', [AdminEmployeeReportController::class, 'review'])
+            ->name('employee-reports.review');
+        Route::get('/employee-leave-requests', [AdminEmployeeLeaveRequestController::class, 'index'])
+            ->name('employee-leave-requests.index');
+        Route::get('/employee-leave-requests/{employeeLeaveRequest}/edit', [AdminEmployeeLeaveRequestController::class, 'edit'])
+            ->name('employee-leave-requests.edit');
+        Route::put('/employee-leave-requests/{employeeLeaveRequest}', [AdminEmployeeLeaveRequestController::class, 'update'])
+            ->name('employee-leave-requests.update');
+        Route::get('/employee-internal-requests', [AdminEmployeeInternalRequestController::class, 'index'])
+            ->name('employee-internal-requests.index');
+        Route::get('/employee-internal-requests/{employeeInternalRequest}/edit', [AdminEmployeeInternalRequestController::class, 'edit'])
+            ->name('employee-internal-requests.edit');
+        Route::put('/employee-internal-requests/{employeeInternalRequest}', [AdminEmployeeInternalRequestController::class, 'update'])
+            ->name('employee-internal-requests.update');
 
         /*
         |--------------------------------------------------------------------------
@@ -288,6 +364,48 @@ Route::prefix('admin')
 
         Route::get('/external-cv-files/{externalCv}/open', [ExternalCvController::class, 'open'])
             ->name('external-cvs.files.open');
+    });
+
+Route::prefix('employee')
+    ->name('employee.')
+    ->middleware(['auth', 'role:employee', 'approved'])
+    ->group(function () {
+        Route::get('/', [EmployeeDashboardController::class, 'index'])->name('dashboard');
+        Route::redirect('/dashboard', '/employee')->name('dashboard.alias');
+
+        Route::middleware('permission:employee_reports')->group(function () {
+            Route::get('/reports', [EmployeeReportController::class, 'index'])->name('reports.index');
+            Route::post('/reports', [EmployeeReportController::class, 'store'])->name('reports.store');
+        });
+
+        Route::middleware('permission:employee_leave_requests')->group(function () {
+            Route::get('/leave-requests', [EmployeeLeaveRequestController::class, 'index'])->name('leave-requests.index');
+            Route::post('/leave-requests', [EmployeeLeaveRequestController::class, 'store'])->name('leave-requests.store');
+            Route::patch('/leave-requests/{leaveRequest}/cancel', [EmployeeLeaveRequestController::class, 'cancel'])->name('leave-requests.cancel');
+        });
+
+        Route::middleware('permission:employee_internal_requests')->group(function () {
+            Route::get('/internal-requests', [EmployeeInternalRequestController::class, 'index'])->name('internal-requests.index');
+            Route::post('/internal-requests', [EmployeeInternalRequestController::class, 'store'])->name('internal-requests.store');
+        });
+
+        Route::middleware('permission:recruitment_requests')->group(function () {
+            Route::get('/client-alerts', [EmployeeClientRequestAlertController::class, 'index'])->name('client-alerts.index');
+        });
+    });
+
+Route::prefix('client')
+    ->name('client.')
+    ->middleware(['auth', 'role:client', 'approved'])
+    ->group(function () {
+        Route::get('/', [ClientDashboardController::class, 'index'])->name('dashboard');
+        Route::redirect('/dashboard', '/client')->name('dashboard.alias');
+        Route::post('/recruitment-requests', [ClientRecruitmentRequestController::class, 'store'])
+            ->middleware('permission:recruitment_requests')
+            ->name('recruitment-requests.store');
+        Route::post('/recruitment-requests/{recruitmentRequest}/alerts', [ClientClientRequestAlertController::class, 'store'])
+            ->middleware('permission:recruitment_requests')
+            ->name('recruitment-requests.alerts.store');
     });
 
 require __DIR__ . '/auth.php';

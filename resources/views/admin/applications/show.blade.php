@@ -24,9 +24,9 @@ Détails de la candidature
       <div class="panel-title">
         {{ $application->full_name }}
         @if($application->is_read)
-          <span class="panel-badge">Lu</span>
+          <span class="panel-badge">Consultee</span>
         @else
-          <span class="panel-badge">Non lu</span>
+          <span class="panel-badge">Non consultee</span>
         @endif
       </div>
     </div>

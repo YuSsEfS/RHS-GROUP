@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Jobs\ProcessManualCvUploadJob;
 use App\Http\Controllers\Controller;
 use App\Models\Cv;
 use App\Models\CvFolder;
 use App\Models\JobApplication;
 use App\Models\JobOffer;
-use App\Services\OpenAiRecruitmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use PhpOffice\PhpWord\IOFactory;
-use Smalot\PdfParser\Parser as PdfParser;
 
 class CvController extends Controller
 {
@@ -134,7 +133,7 @@ class CvController extends Controller
         return view('admin.cvs.create', compact('folders'));
     }
 
-    public function store(Request $request, OpenAiRecruitmentService $ai)
+    public function store(Request $request)
     {
         @set_time_limit(900);
         @ini_set('memory_limit', '1024M');
@@ -173,119 +172,31 @@ class CvController extends Controller
 
         foreach ($request->file('cv_files', []) as $file) {
             try {
-                $binary = file_get_contents($file->getRealPath());
-                $hash = hash('sha256', $binary);
-
-                if (Schema::hasColumn('cvs', 'file_hash') && Cv::where('file_hash', $hash)->exists()) {
-                    $skippedCount++;
-                    continue;
-                }
-
                 $extension = strtolower($file->getClientOriginalExtension());
-                $text = $this->extractTextFromFile($file->getRealPath(), $extension);
+                $tempPath = 'temp/manual-cv-imports/' . uniqid('cv_', true) . '.' . $extension;
 
-                $profile = [
-                    'full_name' => null,
-                    'email' => null,
-                    'phone' => null,
-                    'title' => null,
-                    'years_experience' => null,
-                    'education' => null,
-                    'languages' => [],
-                    'technical_skills' => [],
-                    'soft_skills' => [],
-                    'industries' => [],
-                    'certifications' => [],
-                    'summary' => $text ? mb_substr($text, 0, 1500) : null,
-                    'city' => null,
-                ];
+                Storage::disk('local')->put($tempPath, file_get_contents($file->getRealPath()));
 
-                try {
-                    if (!empty($text)) {
-                        $structured = $ai->structureCv($text);
+                $result = Bus::dispatchSync(new ProcessManualCvUploadJob(
+                    temporaryPath: $tempPath,
+                    originalFilename: $file->getClientOriginalName(),
+                    mimeType: $file->getMimeType(),
+                    fileSize: (int) $file->getSize(),
+                    context: [
+                        'cv_folder_id' => $targetFolderId,
+                        'city' => $validated['city'] ?? null,
+                        'current_title' => $validated['current_title'] ?? null,
+                        'notes' => $validated['notes'] ?? null,
+                    ],
+                ));
 
-                        if (is_array($structured) && !empty($structured)) {
-                            $profile = array_merge($profile, $structured);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    //
+                if (($result['status'] ?? null) === 'created') {
+                    $uploadedCount++;
+                } elseif (($result['status'] ?? null) === 'skipped') {
+                    $skippedCount++;
+                } else {
+                    $failedCount++;
                 }
-
-                $storedPath = 'private/cvs/' . uniqid('cv_', true) . '.' . $extension;
-
-                Storage::disk('local')->put($storedPath, $binary);
-
-                $resolvedCity = $validated['city'] ?? null;
-                $resolvedTitle = $validated['current_title'] ?? null;
-
-                if (!$resolvedCity) {
-                    $resolvedCity = $profile['city']
-                        ?? data_get($profile, 'location.city')
-                        ?? data_get($profile, 'address.city')
-                        ?? null;
-                }
-
-                if (!$resolvedTitle) {
-                    $resolvedTitle = $profile['title']
-                        ?? data_get($profile, 'current_title')
-                        ?? data_get($profile, 'headline')
-                        ?? data_get($profile, 'desired_position')
-                        ?? null;
-                }
-
-                $data = [
-                    'candidate_name' => $profile['full_name'] ?? null,
-                    'email' => $profile['email'] ?? null,
-                    'phone' => $profile['phone'] ?? null,
-                    'original_filename' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getMimeType(),
-                    'file_size' => $file->getSize(),
-                    'encrypted_path' => $storedPath,
-                    'encrypted_extracted_text' => $text,
-                    'structured_profile' => $profile,
-                    'uploaded_at' => now(),
-                ];
-
-                if (Schema::hasColumn('cvs', 'file_hash')) {
-                    $data['file_hash'] = $hash;
-                }
-
-                if (Schema::hasColumn('cvs', 'source_type')) {
-                    $data['source_type'] = 'manual';
-                }
-
-                if (Schema::hasColumn('cvs', 'source_id')) {
-                    $data['source_id'] = null;
-                }
-
-                if (Schema::hasColumn('cvs', 'cv_folder_id')) {
-                    $data['cv_folder_id'] = $targetFolderId;
-                }
-
-                if (Schema::hasColumn('cvs', 'city')) {
-                    $data['city'] = $resolvedCity;
-                }
-
-                if (Schema::hasColumn('cvs', 'current_title')) {
-                    $data['current_title'] = $resolvedTitle;
-                }
-
-                if (Schema::hasColumn('cvs', 'is_active')) {
-                    $data['is_active'] = true;
-                }
-
-                if (Schema::hasColumn('cvs', 'notes')) {
-                    $data['notes'] = $validated['notes'] ?? null;
-                }
-
-                Cv::create($data);
-
-                $uploadedCount++;
-
-                unset($binary, $text, $profile, $data);
-                gc_collect_cycles();
-
             } catch (\Throwable $e) {
                 $failedCount++;
                 report($e);
@@ -480,40 +391,6 @@ class CvController extends Controller
         }
 
         return null;
-    }
-
-    private function extractTextFromFile(string $filePath, string $extension): string
-    {
-        try {
-            if ($extension === 'pdf') {
-                $parser = new PdfParser();
-                $pdf = $parser->parseFile($filePath);
-                return trim($pdf->getText());
-            }
-
-            if (in_array($extension, ['doc', 'docx'], true)) {
-                $phpWord = IOFactory::load($filePath);
-                $text = '';
-
-                foreach ($phpWord->getSections() as $section) {
-                    foreach ($section->getElements() as $element) {
-                        if (method_exists($element, 'getText')) {
-                            $text .= $element->getText() . "\n";
-                        }
-                    }
-                }
-
-                return trim($text);
-            }
-
-            if ($extension === 'txt') {
-                return trim((string) file_get_contents($filePath));
-            }
-        } catch (\Throwable $e) {
-            return '';
-        }
-
-        return '';
     }
 
     private function guessMimeTypeFromExtension(string $extension): string

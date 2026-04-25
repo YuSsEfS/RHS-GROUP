@@ -8,8 +8,6 @@ use App\Models\ExternalCvBatch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use PhpOffice\PhpWord\IOFactory;
-use Smalot\PdfParser\Parser as PdfParser;
 
 class ExternalCvIndexingService
 {
@@ -28,7 +26,7 @@ class ExternalCvIndexingService
     protected array $normalizedLastNames = [];
     protected array $badTitleSentences = [];
 
-    public function __construct()
+    public function __construct(protected CvExtractionService $extraction)
     {
         $config = config('external_cv_parser', []);
 
@@ -334,65 +332,7 @@ class ExternalCvIndexingService
 
     private function extractTextFromFile(string $filePath, string $extension): string
     {
-        try {
-            if ($extension === 'pdf') {
-                $text = (new PdfParser())->parseFile($filePath)->getText();
-
-                return $this->safeDbText($text, 60000) ?? '';
-            }
-
-            if (in_array($extension, ['doc', 'docx'], true)) {
-                $phpWord = IOFactory::load($filePath);
-                $text = '';
-
-                foreach ($phpWord->getSections() as $section) {
-                    foreach ($section->getElements() as $element) {
-                        $text .= $this->extractPhpWordElementText($element);
-                    }
-                }
-
-                return $this->safeDbText($text, 60000) ?? '';
-            }
-
-            if ($extension === 'txt') {
-                return $this->safeDbText((string) file_get_contents($filePath), 60000) ?? '';
-            }
-        } catch (\Throwable $e) {
-            return '';
-        }
-
-        return '';
-    }
-
-    private function extractPhpWordElementText($element): string
-    {
-        $text = '';
-
-        if (method_exists($element, 'getText')) {
-            $value = $element->getText();
-
-            if (is_string($value)) {
-                $text .= $value . "\n";
-            }
-        }
-
-        if (method_exists($element, 'getElements')) {
-            foreach ($element->getElements() as $child) {
-                $text .= $this->extractPhpWordElementText($child);
-            }
-        }
-
-        if (method_exists($element, 'getRows')) {
-            foreach ($element->getRows() as $row) {
-                foreach ($row->getCells() as $cell) {
-                    foreach ($cell->getElements() as $child) {
-                        $text .= $this->extractPhpWordElementText($child);
-                    }
-                }
-            }
-        }
-
-        return $text;
+        return $this->safeDbText($this->extraction->extractTextFromFile($filePath, $extension), 60000) ?? '';
     }
 
     private function extractEmail(string $text): ?string
