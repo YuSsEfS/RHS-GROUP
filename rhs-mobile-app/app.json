@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "RHS Group",
+    "slug": "rhs-mobile-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "rhsgroup",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ma.rhsgroup.mobile"
+    },
+    "android": {
+      "package": "ma.rhsgroup.mobile",
+      "icon": "./assets/icon.png",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "extra": {
+      "apiBaseUrl": "http://10.0.2.2:8000/api",
+      "eas": {
+        "projectId": "64686f42-5193-4c1c-8937-4fe25a1a090a"
+      }
+    },
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-notifications",
+        {
+          "color": "#e31e44"
+        }
+      ]
+    ],
+    "owner": "youssef_saoud"
+  }
+}

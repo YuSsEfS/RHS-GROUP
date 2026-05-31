@@ -1,0 +1,32 @@
+{
+  "name": "rhs-mobile-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild:android": "expo prebuild --platform android",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "expo": "^53.0.0",
+    "expo-asset": "~11.1.7",
+    "expo-dev-client": "~5.2.4",
+    "expo-document-picker": "~13.1.6",
+    "expo-file-system": "~18.1.11",
+    "expo-linear-gradient": "^14.1.5",
+    "expo-notifications": "^0.31.5",
+    "expo-sharing": "~13.1.5",
+    "expo-status-bar": "^2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-safe-area-context": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.14",
+    "typescript": "~5.8.3"
+  }
+}

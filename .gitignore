@@ -22,3 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+rhs-mobile-app/node_modules/
+rhs-mobile-app/.expo/
+rhs-mobile-app/android/build/

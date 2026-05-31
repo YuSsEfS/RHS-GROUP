@@ -1,0 +1,14 @@
+.expo
+.git
+.idea
+node_modules
+android/.gradle
+android/app/build
+android/build
+android/.cxx
+android/app/.cxx
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+rhs-*.png
