@@ -13,6 +13,7 @@ class CvIngestionService
         protected CvExtractionService $extraction,
         protected CvIndexingService $indexing,
         protected OpenAiRecruitmentService $ai,
+        protected CvDuplicateDetectionService $duplicates,
     ) {
     }
 
@@ -46,10 +47,6 @@ class CvIngestionService
                 ->first();
         }
 
-        $existingByHash = Cv::query()
-            ->where('file_hash', $hash)
-            ->first();
-
         if ($existingBySource) {
             if (!empty($existingBySource->encrypted_path) && Storage::disk('local')->exists($existingBySource->encrypted_path)) {
                 Storage::disk('local')->delete($existingBySource->encrypted_path);
@@ -74,36 +71,34 @@ class CvIngestionService
             return ['status' => 'updated', 'cv_id' => $existingBySource->id];
         }
 
-        if ($existingByHash) {
-            $updateData = [
-                'candidate_name' => $existingByHash->candidate_name ?: ($profile['full_name'] ?? $application->full_name),
-                'email' => $existingByHash->email ?: ($profile['email'] ?? $application->email),
-                'phone' => $existingByHash->phone ?: ($profile['phone'] ?? $application->phone),
+        $duplicate = $this->duplicates->findLikelyDuplicate([
+            'file_hash' => $hash,
+            'email' => $profile['email'] ?? $application->email,
+            'phone' => $profile['phone'] ?? $application->phone,
+            'candidate_name' => $profile['full_name'] ?? $application->full_name,
+            'original_filename' => basename($relativePath),
+            'file_size' => strlen($binary),
+            'text' => $text,
+            'current_title' => $profile['title'] ?? $application->position,
+            'city' => $profile['city'] ?? $application->city,
+        ]);
+
+        if ($duplicate) {
+            $this->enrichDuplicateTarget($duplicate['cv'], [
+                'candidate_name' => $profile['full_name'] ?? $application->full_name,
+                'email' => $profile['email'] ?? $application->email,
+                'phone' => $profile['phone'] ?? $application->phone,
+                'city' => $profile['city'] ?? $application->city,
+                'current_title' => $profile['title'] ?? $application->position,
+            ]);
+
+            return [
+                'status' => 'duplicate',
+                'cv_id' => $duplicate['cv_id'],
+                'duplicate_of_cv_id' => $duplicate['cv_id'],
+                'duplicate_score' => $duplicate['score'],
+                'duplicate_reason' => $duplicate['reason'],
             ];
-
-            if (Schema::hasColumn('cvs', 'source_type')) {
-                $updateData['source_type'] = 'application';
-            }
-
-            if (Schema::hasColumn('cvs', 'source_id')) {
-                $updateData['source_id'] = $application->id;
-            }
-
-            if (Schema::hasColumn('cvs', 'city')) {
-                $updateData['city'] = $existingByHash->city ?: $application->city;
-            }
-
-            if (Schema::hasColumn('cvs', 'current_title')) {
-                $updateData['current_title'] = $existingByHash->current_title ?: $application->position;
-            }
-
-            if (Schema::hasColumn('cvs', 'is_active')) {
-                $updateData['is_active'] = true;
-            }
-
-            $existingByHash->update($updateData);
-
-            return ['status' => 'relinked', 'cv_id' => $existingByHash->id];
         }
 
         $storedPath = $this->storePrivateBinary($binary, $extension, 'cv_app_');
@@ -134,10 +129,6 @@ class CvIngestionService
     ): array {
         $hash = $this->extraction->hashBinary($binary);
 
-        if (Schema::hasColumn('cvs', 'file_hash') && Cv::where('file_hash', $hash)->exists()) {
-            return ['status' => 'skipped'];
-        }
-
         $extension = strtolower(pathinfo($originalFilename, PATHINFO_EXTENSION));
         $text = $this->extraction->extractTextFromBinary($binary, $extension);
 
@@ -156,6 +147,36 @@ class CvIngestionService
             ?? data_get($profile, 'current_title')
             ?? data_get($profile, 'headline')
             ?? data_get($profile, 'desired_position');
+
+        $duplicate = $this->duplicates->findLikelyDuplicate([
+            'file_hash' => $hash,
+            'email' => $profile['email'] ?? null,
+            'phone' => $profile['phone'] ?? null,
+            'candidate_name' => $profile['full_name'] ?? null,
+            'original_filename' => $originalFilename,
+            'file_size' => $fileSize,
+            'text' => $text,
+            'current_title' => $resolvedTitle,
+            'city' => $resolvedCity,
+        ]);
+
+        if ($duplicate) {
+            $this->enrichDuplicateTarget($duplicate['cv'], [
+                'candidate_name' => $profile['full_name'] ?? null,
+                'email' => $profile['email'] ?? null,
+                'phone' => $profile['phone'] ?? null,
+                'city' => $resolvedCity,
+                'current_title' => $resolvedTitle,
+            ]);
+
+            return [
+                'status' => 'duplicate',
+                'cv_id' => $duplicate['cv_id'],
+                'duplicate_of_cv_id' => $duplicate['cv_id'],
+                'duplicate_score' => $duplicate['score'],
+                'duplicate_reason' => $duplicate['reason'],
+            ];
+        }
 
         $storedPath = $this->storePrivateBinary($binary, $extension, 'cv_');
 
@@ -181,6 +202,8 @@ class CvIngestionService
 
     public function buildProfile(array $seed, string $text): array
     {
+        $localProfile = $this->indexing->buildStructuredProfile($text, $seed);
+
         $profile = array_merge([
             'full_name' => null,
             'email' => null,
@@ -195,13 +218,21 @@ class CvIngestionService
             'certifications' => [],
             'summary' => $text ? mb_substr($text, 0, 1500) : null,
             'city' => null,
-        ], $this->indexing->buildStructuredProfile($text, $seed), $seed);
+        ], $localProfile, $seed);
 
         if ($text !== '') {
             $structured = $this->ai->structureCv($text);
 
             if (is_array($structured) && !empty($structured)) {
-                $profile = array_merge($profile, array_filter($structured, fn ($value) => $value !== null && $value !== '' && $value !== []));
+                $filteredStructured = array_filter($structured, fn ($value) => $value !== null && $value !== '' && $value !== []);
+
+                foreach (['full_name', 'email', 'phone', 'title', 'headline', 'desired_position', 'city', 'location'] as $protectedKey) {
+                    if (!empty($profile[$protectedKey])) {
+                        unset($filteredStructured[$protectedKey]);
+                    }
+                }
+
+                $profile = array_merge($profile, $filteredStructured);
             }
         }
 
@@ -277,6 +308,52 @@ class CvIngestionService
             $data['notes'] = $notes;
         }
 
+        if (Schema::hasColumn('cvs', 'original_file_size')) {
+            $data['original_file_size'] = $fileSize;
+        }
+
+        if (Schema::hasColumn('cvs', 'compression_status')) {
+            $data['compression_status'] = 'pending';
+        }
+
+        if (Schema::hasColumn('cvs', 'duplicate_of_cv_id')) {
+            $data['duplicate_of_cv_id'] = null;
+        }
+
+        if (Schema::hasColumn('cvs', 'duplicate_score')) {
+            $data['duplicate_score'] = null;
+        }
+
+        if (Schema::hasColumn('cvs', 'duplicate_reason')) {
+            $data['duplicate_reason'] = null;
+        }
+
         return $data;
+    }
+
+    private function enrichDuplicateTarget(Cv $cv, array $seed): void
+    {
+        $updates = [];
+
+        foreach ([
+            'candidate_name',
+            'email',
+            'phone',
+            'city',
+            'current_title',
+        ] as $field) {
+            if (
+                array_key_exists($field, $seed)
+                && !empty($seed[$field])
+                && empty($cv->{$field})
+                && Schema::hasColumn('cvs', $field)
+            ) {
+                $updates[$field] = $seed[$field];
+            }
+        }
+
+        if (!empty($updates)) {
+            $cv->update($updates);
+        }
     }
 }

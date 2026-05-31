@@ -101,7 +101,7 @@ Gérez vos formations : création, mise à jour, activation et suppression
               </svg>
             </a>
 
-            <form action="{{ route('admin.formations.destroy',$f) }}" method="POST" onsubmit="return confirm('Supprimer cette formation ?')" style="display:inline">
+            <form action="{{ route('admin.formations.destroy',$f) }}" method="POST" data-rhs-confirm="Supprimer cette formation ?" onsubmit="return confirm('Supprimer cette formation ?')" style="display:inline">
               @csrf
               @method('DELETE')
               <button class="icon-btn icon-btn-danger" type="submit" title="Supprimer">

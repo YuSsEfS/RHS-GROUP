@@ -9,6 +9,7 @@
         "php": "^8.2",
         "endroid/qr-code": "^6.0",
         "laravel/framework": "^12.0",
+        "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
         "maennchen/zipstream-php": "^3.1",
         "openai-php/client": "^0.19",
@@ -52,6 +53,10 @@
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "workers": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#22c55e,#3b82f6,#f97316,#a855f7,#ef4444,#64748b,#e31e44\" --names=recruitment,indexing,compression,ai,odoo,default,mobile-push \"php artisan queue:work database --queue=recruitment --sleep=1 --tries=3 --timeout=1200 --memory=1024\" \"php artisan queue:work database --queue=indexing --sleep=1 --tries=5 --timeout=14400 --memory=1024\" \"php artisan queue:work database --queue=compression --sleep=1 --tries=5 --timeout=1200 --memory=1024\" \"php artisan queue:work database --queue=ai --sleep=1 --tries=3 --timeout=1200 --memory=768\" \"php artisan queue:work database --queue=odoo --sleep=1 --tries=3 --timeout=1800 --memory=768\" \"php artisan queue:work database --queue=default --sleep=1 --tries=3 --timeout=600 --memory=512\" \"php artisan mobile:notifications:dispatch --watch --interval=12\" --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",

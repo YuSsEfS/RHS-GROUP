@@ -25,7 +25,7 @@ class ClientRequestAlertController extends Controller
         ]);
 
         return redirect()
-            ->route('client.dashboard')
+            ->route('client.recruitment-requests.show', $recruitmentRequest)
             ->with('success', 'Votre relance a ete envoyee a l equipe RHS.');
     }
 }

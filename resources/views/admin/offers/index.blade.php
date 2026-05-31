@@ -96,7 +96,7 @@ Gérez vos offres : création, mise à jour, activation et suppression
               <td>
                 <div class="cell-main">
                   <div class="cell-title">{{ $offer->title }}</div>
-                  <div class="cell-sub">/offres/{{ $offer->slug }}</div>
+                  <div class="cell-sub">/offres?offer={{ $offer->id }}#jobs-list</div>
                 </div>
               </td>
 
@@ -138,7 +138,7 @@ Gérez vos offres : création, mise à jour, activation et suppression
 
   {{-- 🔗 QR to public offer page --}}
 @php
-  $offerUrl = route('jobs.show', $offer->slug);
+  $offerUrl = route('jobs', ['offer' => $offer->id]) . '#jobs-list';
 
   // QR image (inline preview)
   $qrImg = route('qr', ['url' => rawurlencode($offerUrl)]) . '?filename=' . rawurlencode('qr-offre-' . $offer->id);
@@ -169,7 +169,7 @@ Gérez vos offres : création, mise à jour, activation et suppression
 
 
   {{-- 🗑 Delete --}}
-  <form action="{{ route('admin.offers.destroy', $offer) }}" method="POST" onsubmit="return confirm('Supprimer cette offre ?')">
+  <form action="{{ route('admin.offers.destroy', $offer) }}" method="POST" data-rhs-confirm="Supprimer cette offre ?" onsubmit="return confirm('Supprimer cette offre ?')">
     @csrf
     @method('DELETE')
     <button class="icon-btn icon-btn-danger" type="submit" title="Supprimer">

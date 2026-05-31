@@ -316,6 +316,30 @@
   font-weight: 800;
 }
 
+.apply-page .apply-cndp-section {
+  padding: 0 0 80px;
+}
+
+.apply-page .apply-cndp-card {
+  max-width: 980px;
+  text-align: center;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.apply-page .apply-cndp-logo {
+  width: 120px;
+  height: auto;
+  display: block;
+  margin: 0 auto 18px;
+}
+
+.apply-page .apply-cndp-card p {
+  max-width: 920px;
+  margin: 0 auto;
+  font-size: 14px;
+}
+
 /* Responsive */
 @media(max-width: 980px){
   .apply-page .apply-hero{

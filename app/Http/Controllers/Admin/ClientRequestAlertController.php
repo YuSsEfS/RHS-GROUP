@@ -45,8 +45,15 @@ class ClientRequestAlertController extends Controller
             $clientRequestAlert->update(['admin_seen_at' => now()]);
         }
 
+        $threadAlerts = ClientRequestAlert::query()
+            ->with(['clientUser', 'responder'])
+            ->where('recruitment_request_id', $clientRequestAlert->recruitment_request_id)
+            ->orderBy('created_at')
+            ->get();
+
         return view('admin.client_request_alerts.edit', [
             'alert' => $clientRequestAlert->load(['clientUser', 'recruitmentRequest', 'responder']),
+            'threadAlerts' => $threadAlerts,
             'statuses' => ClientRequestAlert::availableStatuses(),
             'quickResponses' => ClientRequestAlert::quickResponses(),
         ]);
@@ -74,7 +81,7 @@ class ClientRequestAlertController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.client-request-alerts.index')
+            ->route('admin.client-request-alerts.edit', $clientRequestAlert)
             ->with('success', 'La relance client a ete mise a jour.');
     }
 }

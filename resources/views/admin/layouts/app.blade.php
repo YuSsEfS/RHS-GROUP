@@ -3,62 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>@yield('title','Admin – RHS')</title>
+  <title>@yield('title','Admin - RHS')</title>
   <link rel="icon" href="{{ asset('images/ChatGPT%20Image%20Jan%2015%2C%202026%2C%2009_50_56%20PM.png') }}" type="image/png">
-  <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
-  @stack('styles')
+ <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}">
+
+@stack('styles')
+
+<link rel="stylesheet" href="{{ asset('css/admin-sidebar-fix.css') }}?v={{ filemtime(public_path('css/admin-sidebar-fix.css')) }}">
 </head>
-<body class="admin-body">
+<body class="admin-body {{ request()->routeIs('admin.dashboard') || request()->routeIs('admin.applications.*') || request()->routeIs('admin.cvs.*') ? 'admin-perf-mode' : '' }}">
   @php
-    $hasClientAlertsTable = \Illuminate\Support\Facades\Schema::hasTable('client_request_alerts');
-    $sidebarPendingClientRequests = \App\Models\RecruitmentRequest::query()
-      ->whereNotNull('client_user_id')
-      ->whereNull('admin_seen_at')
-      ->count();
+    $sidebarItems = data_get($sidebarNotifications ?? [], 'items', []);
+    $sidebarGroups = data_get($sidebarNotifications ?? [], 'groups', []);
+    $clientRegister = data_get($sidebarNotifications ?? [], 'client_register', [
+      'enabled' => false,
+      'url' => null,
+    ]);
 
-    $sidebarClientAlerts = $hasClientAlertsTable
-      ? \App\Models\ClientRequestAlert::query()->whereNull('admin_seen_at')->count()
-      : 0;
+    $sidebarPendingUsers = (int) ($sidebarItems['users'] ?? 0);
+    $sidebarNewEmployeeReports = (int) ($sidebarItems['employee_reports'] ?? 0);
+    $sidebarEmployeeAssignments = (int) ($sidebarItems['employee_assignments'] ?? 0);
+    $sidebarPendingLeaveRequests = (int) ($sidebarItems['employee_leave_requests'] ?? 0);
+    $sidebarUnreadEmployeeInternalRequests = (int) ($sidebarItems['employee_internal_requests'] ?? 0);
+    $sidebarPendingClientRequests = (int) ($sidebarItems['client_requests'] ?? 0);
+    $sidebarClientAlerts = (int) ($sidebarItems['client_alerts'] ?? 0);
+    $sidebarUnreadApplications = (int) ($sidebarItems['applications'] ?? 0);
+    $sidebarUnreadMatchingResults = (int) ($sidebarItems['matching_history'] ?? 0);
+    $sidebarCvImportBatches = (int) ($sidebarItems['cv_imports'] ?? 0);
+    $sidebarExternalBatches = (int) ($sidebarItems['external_batches'] ?? 0);
+    $sidebarUnreadConversations = (int) ($sidebarItems['conversations'] ?? 0);
+    $sidebarUnreadMeetings = (int) ($sidebarItems['meetings'] ?? 0);
 
-    $sidebarUnreadApplications = \App\Models\JobApplication::query()
-      ->whereNull('admin_seen_at')
-      ->count();
+    $isEmployeeAssignmentsRoute = request()->routeIs('admin.client-recruitment-requests.index')
+      && request()->filled('assignment')
+      && request('assignment') !== 'all';
 
-    $sidebarPendingUsers = \App\Models\User::query()
-      ->where('status', \App\Models\User::STATUS_PENDING)
-      ->count();
+    $employeesNavOpen = request()->routeIs('admin.employee-reports.*')
+      || $isEmployeeAssignmentsRoute
+      || request()->routeIs('admin.employee-leave-requests.*')
+      || request()->routeIs('admin.employee-internal-requests.*');
 
-    $sidebarNewEmployeeReports = \App\Models\EmployeeReport::query()
-      ->whereNull('admin_seen_at')
-      ->count();
+    $clientsNavOpen = (request()->routeIs('admin.client-recruitment-requests.*') && !$isEmployeeAssignmentsRoute)
+      || request()->routeIs('admin.client-request-alerts.*');
 
-    $sidebarPendingLeaveRequests = \App\Models\EmployeeLeaveRequest::query()
-      ->whereNull('admin_seen_at')
-      ->count();
+    $recruitmentNavOpen = request()->routeIs('admin.recruitment_requests.*')
+      || request()->routeIs('admin.matching-history.*')
+      || request()->routeIs('admin.cvs.*')
+      || request()->routeIs('admin.external-cvs.*')
+      || request()->routeIs('admin.applications.*')
+      || request()->routeIs('admin.offers.*');
 
-    $sidebarUnreadEmployeeInternalRequests = \App\Models\EmployeeInternalRequest::query()
-      ->whereNull('admin_seen_at')
-      ->count();
+    $platformNavOpen = request()->routeIs('admin.formations.*')
+      || request()->routeIs('admin.content.*');
   @endphp
 
   <aside class="admin-sidebar">
 
-    <div class="admin-brand">
-      <a href="{{ route('admin.dashboard') }}" class="admin-brand-link">
-        <div class="admin-brand-logo">
-          <img
-            src="{{ asset('images/ChatGPT Image Jan 15, 2026, 09_50_56 PM.png') }}"
-            alt="RHS"
-            loading="lazy"
-          >
-        </div>
-
-        <div class="admin-brand-text">
-          <div class="admin-brand-title">RHS Admin</div>
-          <div class="admin-brand-sub">Dashboard</div>
-        </div>
-      </a>
-    </div>
+  <a href="{{ route('admin.dashboard') }}" class="admin-brand admin-brand-link" aria-label="RHS Admin Dashboard">
+    <span class="admin-brand-logo">
+      <img src="{{ asset('images/ChatGPT%20Image%20Jan%2015%2C%202026%2C%2009_50_56%20PM.png') }}" alt="RHS Admin">
+    </span>
+    <span class="admin-brand-text">
+      <span class="admin-brand-title">RHS Admin</span>
+      <span class="admin-brand-sub">Dashboard</span>
+    </span>
+  </a>
 
     <nav class="admin-nav">
       <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}">
@@ -67,7 +76,7 @@
             <path d="M4 13h7V4H4v9Zm0 7h7v-5H4v5Zm9 0h7v-9h-7v9Zm0-16v5h7V4h-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        Dashboard
+        <span>Dashboard</span>
       </a>
 
       <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}">
@@ -79,169 +88,255 @@
             <path d="M2 20v-1a4 4 0 0 1 4-4h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        Utilisateurs
+        <span>Utilisateurs</span>
         @if($sidebarPendingUsers > 0)
           <span class="admin-nav-badge">{{ $sidebarPendingUsers }}</span>
         @endif
       </a>
 
-      <a href="{{ route('admin.client-recruitment-requests.index') }}" class="{{ request()->routeIs('admin.client-recruitment-requests.*') ? 'is-active' : '' }}">
+      <details class="sidebar-group {{ $employeesNavOpen ? 'is-active' : '' }}" {{ $employeesNavOpen ? 'open' : '' }}>
+        <summary class="sidebar-group-toggle">
+          <span class="sidebar-group-label">
+            <span class="admin-ico">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M16 11c1.66 0 3-1.57 3-3.5S17.66 4 16 4s-3 1.57-3 3.5S14.34 11 16 11Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 10C9.66 10 11 8.66 11 7S9.66 4 8 4 5 5.34 5 7s1.34 3 3 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 20v-1a4 4 0 0 1 4-4h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="admin-nav-label">Employes</span>
+          </span>
+          @if(($sidebarGroups['employees'] ?? 0) > 0)
+            <span class="admin-nav-badge">{{ $sidebarGroups['employees'] }}</span>
+          @endif
+          <span class="sidebar-group-caret" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </summary>
+
+        <div class="sidebar-submenu">
+          <a href="{{ route('admin.client-recruitment-requests.index', ['assignment' => 'assigned_unseen']) }}" class="{{ $isEmployeeAssignmentsRoute ? 'is-active' : '' }}">
+            <span>Affectations recrutement</span>
+            @if($sidebarEmployeeAssignments > 0)
+              <span class="admin-nav-badge">{{ $sidebarEmployeeAssignments }}</span>
+            @endif
+          </a>
+
+          <a href="{{ route('admin.employee-reports.index') }}" class="{{ request()->routeIs('admin.employee-reports.*') ? 'is-active' : '' }}">
+            <span>Rapports employes</span>
+            @if($sidebarNewEmployeeReports > 0)
+              <span class="admin-nav-badge">{{ $sidebarNewEmployeeReports }}</span>
+            @endif
+          </a>
+
+          <a href="{{ route('admin.employee-leave-requests.index') }}" class="{{ request()->routeIs('admin.employee-leave-requests.*') ? 'is-active' : '' }}">
+            <span>Conges employes</span>
+            @if($sidebarPendingLeaveRequests > 0)
+              <span class="admin-nav-badge">{{ $sidebarPendingLeaveRequests }}</span>
+            @endif
+          </a>
+
+          <a href="{{ route('admin.employee-internal-requests.index') }}" class="{{ request()->routeIs('admin.employee-internal-requests.*') ? 'is-active' : '' }}">
+            <span>Requetes internes</span>
+            @if($sidebarUnreadEmployeeInternalRequests > 0)
+              <span class="admin-nav-badge">{{ $sidebarUnreadEmployeeInternalRequests }}</span>
+            @endif
+          </a>
+        </div>
+      </details>
+
+      <details class="sidebar-group {{ $clientsNavOpen ? 'is-active' : '' }}" {{ $clientsNavOpen ? 'open' : '' }}>
+        <summary class="sidebar-group-toggle">
+          <span class="sidebar-group-label">
+            <span class="admin-ico">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 5h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 10h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="admin-nav-label">Clients</span>
+          </span>
+          @if(($sidebarGroups['clients'] ?? 0) > 0)
+            <span class="admin-nav-badge">{{ $sidebarGroups['clients'] }}</span>
+          @endif
+          <span class="sidebar-group-caret" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </summary>
+
+        <div class="sidebar-submenu">
+          <a href="{{ route('admin.client-recruitment-requests.index') }}" class="{{ request()->routeIs('admin.client-recruitment-requests.*') ? 'is-active' : '' }}">
+            <span>Demandes clients</span>
+            @if($sidebarPendingClientRequests > 0)
+              <span class="admin-nav-badge">{{ $sidebarPendingClientRequests }}</span>
+            @endif
+          </a>
+
+          <a href="{{ route('admin.client-request-alerts.index') }}" class="{{ request()->routeIs('admin.client-request-alerts.*') ? 'is-active' : '' }}">
+            <span>Relances clients</span>
+            @if($sidebarClientAlerts > 0)
+              <span class="admin-nav-badge">{{ $sidebarClientAlerts }}</span>
+            @endif
+          </a>
+        </div>
+      </details>
+
+      <details class="sidebar-group {{ $recruitmentNavOpen ? 'is-active' : '' }}" {{ $recruitmentNavOpen ? 'open' : '' }}>
+        <summary class="sidebar-group-toggle">
+          <span class="sidebar-group-label">
+            <span class="admin-ico">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 3h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M9 3v3m6-3v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <rect x="5" y="6" width="14" height="15" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M8 11h8M8 15h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="admin-nav-label">Recrutement &amp; AI Matching</span>
+          </span>
+          @if(($sidebarGroups['recruitment'] ?? 0) > 0)
+            <span class="admin-nav-badge">{{ $sidebarGroups['recruitment'] }}</span>
+          @endif
+          <span class="sidebar-group-caret" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </summary>
+
+        <div class="sidebar-submenu">
+          <a href="{{ route('admin.recruitment_requests.create') }}" class="{{ request()->routeIs('admin.recruitment_requests.create') ? 'is-active' : '' }}">
+            <span>AI Matching</span>
+          </a>
+
+          <a href="{{ route('admin.matching-history.index') }}" class="{{ request()->routeIs('admin.matching-history.*') || request()->routeIs('admin.recruitment_requests.results') ? 'is-active' : '' }}">
+            <span>Historique Matching</span>
+            @if($sidebarUnreadMatchingResults > 0)
+              <span class="admin-nav-badge">{{ $sidebarUnreadMatchingResults }}</span>
+            @endif
+          </a>
+
+          <a href="{{ route('admin.applications.index') }}" class="{{ request()->routeIs('admin.applications.*') ? 'is-active' : '' }}">
+            <span>Candidatures</span>
+            @if($sidebarUnreadApplications > 0)
+              <span class="admin-nav-badge">{{ $sidebarUnreadApplications }}</span>
+            @endif
+          </a>
+
+          <a href="{{ route('admin.offers.index') }}" class="{{ request()->routeIs('admin.offers.*') ? 'is-active' : '' }}">
+            <span>Offres</span>
+          </a>
+
+          <a href="{{ route('admin.cvs.index') }}" class="{{ request()->routeIs('admin.cvs.*') ? 'is-active' : '' }}">
+            <span>CV Bank</span>
+            @if($sidebarCvImportBatches > 0)
+              <span class="admin-nav-badge">{{ $sidebarCvImportBatches }}</span>
+            @endif
+          </a>
+
+          <a href="{{ route('admin.cvs.archived') }}" class="{{ request()->routeIs('admin.cvs.archived') ? 'is-active' : '' }}">
+            <span>Archives CV</span>
+          </a>
+
+          <a href="{{ route('admin.external-cvs.index') }}" class="{{ request()->routeIs('admin.external-cvs.*') ? 'is-active' : '' }}">
+            <span>Base externe</span>
+            @if($sidebarExternalBatches > 0)
+              <span class="admin-nav-badge">{{ $sidebarExternalBatches }}</span>
+            @endif
+          </a>
+        </div>
+      </details>
+
+      <details class="sidebar-group {{ $platformNavOpen ? 'is-active' : '' }}" {{ $platformNavOpen ? 'open' : '' }}>
+        <summary class="sidebar-group-toggle">
+          <span class="sidebar-group-label">
+            <span class="admin-ico">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 3h10v18H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 7h4M10 11h4M10 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="admin-nav-label">Plateforme</span>
+          </span>
+          @if(($sidebarGroups['platform'] ?? 0) > 0)
+            <span class="admin-nav-badge">{{ $sidebarGroups['platform'] }}</span>
+          @endif
+          <span class="sidebar-group-caret" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </summary>
+
+        <div class="sidebar-submenu">
+          <a href="{{ route('admin.formations.index') }}" class="{{ request()->routeIs('admin.formations.*') ? 'is-active' : '' }}">
+            <span>Catalogue des formations</span>
+          </a>
+
+          <a href="{{ route('admin.content.index') }}" class="{{ request()->routeIs('admin.content.*') ? 'is-active' : '' }}">
+            <span>Contenu site</span>
+          </a>
+        </div>
+      </details>
+
+      <a href="{{ route('admin.meetings.index') }}" class="{{ request()->routeIs('admin.meetings.*') ? 'is-active' : '' }}">
         <span class="admin-ico">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M8 3h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M6 7h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M7 3v3m10-3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        Demandes clients
-        @if($sidebarPendingClientRequests > 0)
-          <span class="admin-nav-badge">{{ $sidebarPendingClientRequests }}</span>
+        <span>Reunions</span>
+        @if($sidebarUnreadMeetings > 0)
+          <span class="admin-nav-badge">{{ $sidebarUnreadMeetings }}</span>
         @endif
       </a>
 
-      <a href="{{ route('admin.client-request-alerts.index') }}" class="{{ request()->routeIs('admin.client-request-alerts.*') ? 'is-active' : '' }}">
+      <a href="{{ route('admin.rh-resources.index') }}" class="{{ request()->routeIs('admin.rh-resources.*') ? 'is-active' : '' }}">
         <span class="admin-ico">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M6 5h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 10h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M6 4h9l3 3v13H6V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M14 4v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </span>
-        Relances clients
-        @if($sidebarClientAlerts > 0)
-          <span class="admin-nav-badge">{{ $sidebarClientAlerts }}</span>
-        @endif
-      </a>
-
-      <a href="{{ route('admin.employee-reports.index') }}" class="{{ request()->routeIs('admin.employee-reports.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 9h6M9 13h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </span>
-        Rapports employes
-        @if($sidebarNewEmployeeReports > 0)
-          <span class="admin-nav-badge">{{ $sidebarNewEmployeeReports }}</span>
-        @endif
-      </a>
-
-      <a href="{{ route('admin.employee-leave-requests.index') }}" class="{{ request()->routeIs('admin.employee-leave-requests.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M9 14l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        Conges employes
-        @if($sidebarPendingLeaveRequests > 0)
-          <span class="admin-nav-badge">{{ $sidebarPendingLeaveRequests }}</span>
-        @endif
-      </a>
-
-      <a href="{{ route('admin.employee-internal-requests.index') }}" class="{{ request()->routeIs('admin.employee-internal-requests.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 14c0 1.1-.9 2-2 2H8l-5 4V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v9Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        Requetes internes
-        @if($sidebarUnreadEmployeeInternalRequests > 0)
-          <span class="admin-nav-badge">{{ $sidebarUnreadEmployeeInternalRequests }}</span>
-        @endif
-      </a>
-
-      <a href="{{ route('admin.offers.index') }}" class="{{ request()->routeIs('admin.offers.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 7h10v14H7V7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 3h6v4H9V3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </span>
-        Offres
-      </a>
-
-      <a href="{{ route('admin.applications.index') }}" class="{{ request()->routeIs('admin.applications.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M16 11c1.66 0 3-1.57 3-3.5S17.66 4 16 4s-3 1.57-3 3.5S14.34 11 16 11Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 10C9.66 10 11 8.66 11 7S9.66 4 8 4 5 5.34 5 7s1.34 3 3 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 20v-1a4 4 0 0 1 4-4h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        Candidatures
-        @if($sidebarUnreadApplications > 0)
-          <span class="admin-nav-badge">{{ $sidebarUnreadApplications }}</span>
-        @endif
-      </a>
-
-      <a href="{{ route('admin.cvs.index') }}" class="{{ request()->routeIs('admin.cvs.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14 3v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 13h6M9 17h6M9 9h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </span>
-        CV Bank
-      </a>
-      <a href="{{ route('admin.external-cvs.index') }}"
-   class="{{ request()->routeIs('admin.external-cvs.*') ? 'is-active' : '' }}">
-  <span class="admin-ico">
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 6h16M4 12h16M4 18h16"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"/>
-    </svg>
-  </span>
-  Base externe
-</a>
-
-      <a href="{{ route('admin.recruitment_requests.create') }}" class="{{ request()->routeIs('admin.recruitment_requests.*') || request()->routeIs('admin.matches.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M8 3h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M9 3v3m6-3v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <rect x="5" y="6" width="14" height="15" rx="2" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M8 11h8M8 15h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </span>
-        AI Matching
-      </a>
-
-      <a href="{{ route('admin.formations.index') }}" class="{{ request()->routeIs('admin.formations.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M3 7l9-4 9 4-9 4-9-4Z"
-                  stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 10v6"
-                  stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round"/>
-            <path d="M5 12v5c0 1.1 3.13 2 7 2s7-.9 7-2v-5"
-                  stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round"/>
-          </svg>
-        </span>
-        Catalogue des formations
-      </a>
-
-      <a href="{{ route('admin.content.index') }}" class="{{ request()->routeIs('admin.content.*') ? 'is-active' : '' }}">
-        <span class="admin-ico">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 3h10v18H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 7h4M10 11h4M10 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </span>
-        Contenu site
+        <span>Ressources RH</span>
       </a>
     </nav>
 
     <div class="admin-sidebar-footer">
+      <div class="admin-sidebar-card panel-safe">
+        <div class="admin-sidebar-card-head">
+          <strong>Lien inscription client</strong>
+        </div>
+
+        @if($clientRegister['enabled'] && $clientRegister['url'])
+          <div class="admin-copy-box">
+            <input
+              type="text"
+              id="client-register-link"
+              class="admin-copy-input"
+              readonly
+              value="{{ $clientRegister['url'] }}"
+            >
+            <button
+              type="button"
+              class="admin-btn admin-btn-ghost admin-btn-sm"
+              data-copy-target="client-register-link"
+              data-copy-feedback="client-register-feedback"
+            >
+              Copier
+            </button>
+          </div>
+          <div class="admin-copy-feedback" id="client-register-feedback">Lien copie</div>
+        @else
+          <div class="admin-copy-disabled">L inscription client n est pas active sur cette installation.</div>
+        @endif
+      </div>
+
       <a href="{{ route('home') }}" class="admin-btn admin-btn-ghost">
         <span class="admin-ico">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -253,10 +348,15 @@
         Voir le site
       </a>
 
+      <div class="admin-profile-wrapper">
       <a href="{{ route('admin.profile.edit') }}"
          class="admin-profile {{ request()->routeIs('admin.profile.*') ? 'is-active' : '' }}">
         <div class="admin-profile-avatar">
-          {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+          @if(auth()->user()->profile_photo_url)
+            <img src="{{ auth()->user()->profile_photo_url }}" alt="{{ auth()->user()->name }}">
+          @else
+            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+          @endif
         </div>
 
         <div class="admin-profile-info">
@@ -274,6 +374,31 @@
           </svg>
         </span>
       </a>
+
+      <form method="POST" action="{{ route('logout') }}" class="admin-logout-form">
+        @csrf
+        <button type="submit" class="admin-btn admin-btn-danger admin-logout-btn" aria-label="Deconnexion">
+          <span class="admin-ico">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M15 8l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M19 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>Deconnexion</span>
+        </button>
+      </form>
+      </div>
+      <a href="{{ config('odoo.recruitment_url') ?: rtrim(config('odoo.url'), '/') . '/odoo/recruitment' }}"
+   class="admin-btn admin-btn-ghost"
+   target="_blank">
+    <span class="admin-ico">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+    </span>
+    Odoo Recruitment
+</a>
 
       <form method="POST" action="{{ route('logout') }}">
         @csrf
@@ -294,6 +419,28 @@
 
   <main class="admin-main">
 
+    <div class="admin-navbar">
+      <div class="admin-global-search" data-search-endpoint="{{ route('admin.search.suggest') }}">
+        <form method="GET" action="{{ route('admin.search.index') }}">
+          <input type="search" name="q" id="admin-global-search-input" placeholder="Rechercher partout dans le dashboard admin">
+        </form>
+        <div class="admin-search-suggestions" id="admin-search-suggestions"></div>
+      </div>
+
+      <div class="admin-navbar-actions">
+        <a href="{{ route('admin.conversations.index', ['empty' => 1]) }}" class="btn btn-ghost">
+          Messages
+          <span
+            class="admin-nav-badge"
+            data-conversation-notification-badge
+            style="{{ $sidebarUnreadConversations > 0 ? '' : 'display:none;' }}"
+            {{ $sidebarUnreadConversations > 0 ? '' : 'hidden' }}
+          >{{ $sidebarUnreadConversations }}</span>
+        </a>
+        <a href="{{ route('admin.profile.edit') }}" class="btn btn-ghost">Profil</a>
+      </div>
+    </div>
+
     <header class="admin-top">
       <div class="admin-top-left">
         <h1 class="admin-title">@yield('page_title','')</h1>
@@ -303,9 +450,11 @@
         @endif
       </div>
 
-      <div class="admin-top-actions">
-        @yield('top_actions')
-      </div>
+      @hasSection('top_actions')
+        <div class="admin-page-actions">
+          @yield('top_actions')
+        </div>
+      @endif
     </header>
 
     @if(session('success'))
@@ -332,6 +481,124 @@
     </div>
 
   </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('[data-copy-target]').forEach(function (button) {
+        button.addEventListener('click', async function () {
+          const targetId = button.getAttribute('data-copy-target');
+          const feedbackId = button.getAttribute('data-copy-feedback');
+          const input = document.getElementById(targetId);
+          const feedback = feedbackId ? document.getElementById(feedbackId) : null;
+
+          if (!input) {
+            return;
+          }
+
+          try {
+            await navigator.clipboard.writeText(input.value);
+
+            if (feedback) {
+              feedback.classList.add('is-visible');
+              window.setTimeout(function () {
+                feedback.classList.remove('is-visible');
+              }, 2200);
+            }
+          } catch (error) {
+            input.focus();
+            input.select();
+            document.execCommand('copy');
+
+            if (feedback) {
+              feedback.classList.add('is-visible');
+              window.setTimeout(function () {
+                feedback.classList.remove('is-visible');
+              }, 2200);
+            }
+          }
+        });
+      });
+
+      const searchWrapper = document.querySelector('.admin-global-search');
+      const searchInput = document.getElementById('admin-global-search-input');
+      const suggestionBox = document.getElementById('admin-search-suggestions');
+
+      if (searchWrapper && searchInput && suggestionBox) {
+        let timer = null;
+
+        const clearSuggestions = function () {
+          suggestionBox.innerHTML = '';
+          suggestionBox.classList.remove('is-visible');
+        };
+
+        const escapeHtml = function (value) {
+          return String(value ?? '').replace(/[&<>"']/g, function (char) {
+            return ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#039;'
+            })[char];
+          });
+        };
+
+        searchInput.addEventListener('input', function () {
+          window.clearTimeout(timer);
+          const value = searchInput.value.trim();
+
+          if (value === '') {
+            clearSuggestions();
+            return;
+          }
+
+          timer = window.setTimeout(async function () {
+            try {
+              const response = await fetch(searchWrapper.dataset.searchEndpoint + '?q=' + encodeURIComponent(value), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+              });
+              const items = await response.json();
+              const limitedItems = Array.isArray(items) ? items.slice(0, 5) : [];
+
+              suggestionBox.innerHTML = limitedItems.length
+                ? '<div class="admin-search-suggestions-head"><span>Suggestions</span><button type="button" class="admin-search-close" aria-label="Fermer">x</button></div>' +
+                  limitedItems.map(function (item) {
+                    return '<a class="admin-search-suggestion" href="' + escapeHtml(item.url) + '">' +
+                      '<span class="admin-search-group">' + escapeHtml(item.group) + '</span>' +
+                      '<strong>' + escapeHtml(item.label) + '</strong>' +
+                    '</a>';
+                  }).join('')
+                : '';
+
+              suggestionBox.classList.toggle('is-visible', limitedItems.length > 0);
+            } catch (error) {
+              clearSuggestions();
+            }
+          }, 180);
+        });
+
+        suggestionBox.addEventListener('click', function (event) {
+          if (event.target.closest('.admin-search-close')) {
+            event.preventDefault();
+            clearSuggestions();
+            searchInput.blur();
+          }
+        });
+
+        document.addEventListener('click', function (event) {
+          if (!searchWrapper.contains(event.target)) {
+            clearSuggestions();
+          }
+        });
+      }
+    });
+  </script>
+
+  @include('partials.rhs-select-enhancer')
+  @include('partials.rhs-feedback')
+  @include('partials.rhs-notification-worker', ['notificationEndpoint' => route('admin.notifications.sidebar')])
+  <script src="{{ asset('js/rhs-ui.js') }}" defer></script>
+  <script src="{{ asset('js/admin-sidebar.js') }}?v={{ filemtime(public_path('js/admin-sidebar.js')) }}" defer></script>
 
   @stack('scripts')
 </body>

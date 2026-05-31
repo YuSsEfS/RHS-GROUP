@@ -106,6 +106,7 @@ class LocalCvScoringService
             is_array($profile['certifications'] ?? null) ? implode(' ', $profile['certifications']) : ($profile['certifications'] ?? ''),
             is_array($profile['industries'] ?? null) ? implode(' ', $profile['industries']) : ($profile['industries'] ?? ''),
             is_array($profile['experiences'] ?? null) ? json_encode($profile['experiences'], JSON_UNESCAPED_UNICODE) : '',
+            (string) ($profile['raw_text'] ?? ''),
         ])));
 
         /*
@@ -156,12 +157,18 @@ class LocalCvScoringService
         |--------------------------------------------------------------------------
         */
         $reqExp = $this->extractRequiredExperience($requirements);
-        $cvExp = $this->extractCandidateExperience($profile, $profilePool);
+        $cvExpInfo = $this->extractCandidateExperienceDetails($profile, $profilePool);
+        $cvExp = $cvExpInfo['years'];
 
         if ($reqExp !== null) {
             $activeWeights['experience'] = $weights['experience'];
 
             $ratio = $this->scoreExperienceFit($reqExp, $cvExp);
+
+            if ($cvExpInfo['inferred'] && ($cvExpInfo['confidence'] ?? 1) < 0.8) {
+                $ratio *= 0.92;
+            }
+
             $breakdown['experience'] = round($ratio * $weights['experience'], 2);
 
             if ($ratio >= 0.95) {
@@ -173,6 +180,10 @@ class LocalCvScoringService
             } else {
                 $summaryParts[] = 'expérience insuffisante';
             }
+
+            if ($cvExpInfo['inferred']) {
+                $summaryParts[] = 'expérience estimée depuis les dates du CV';
+            }
         }
 
         /*
@@ -181,18 +192,28 @@ class LocalCvScoringService
         |--------------------------------------------------------------------------
         */
         $ageReq = $this->normalizeAgeRequirement($requirements['age_requirement'] ?? ($requirements['age_text'] ?? null));
-        $cvAge = $this->extractCandidateAge($profile, $profilePool);
+        $cvAgeInfo = $this->extractCandidateAgeDetails($profile, $profilePool);
+        $cvAge = $cvAgeInfo['age'];
 
         if ($ageReq['has_requirement']) {
             $activeWeights['age'] = $weights['age'];
 
             $ratio = $this->scoreAgeFit($ageReq, $cvAge);
+
+            if ($cvAgeInfo['inferred'] && ($cvAgeInfo['confidence'] ?? 1) < 0.9) {
+                $ratio *= 0.94;
+            }
+
             $breakdown['age'] = round($ratio * $weights['age'], 2);
 
             if ($ratio >= 1) {
                 $summaryParts[] = 'âge conforme';
             } elseif ($ratio >= 0.6) {
                 $summaryParts[] = 'âge proche du besoin';
+            }
+
+            if ($cvAgeInfo['inferred']) {
+                $summaryParts[] = 'âge estimé depuis la date de naissance';
             }
         }
 
@@ -288,27 +309,30 @@ class LocalCvScoringService
         | CONSISTENCY BONUS
         |--------------------------------------------------------------------------
         */
-        $activeWeights['consistency_bonus'] = $weights['consistency_bonus'];
+        $hasCoreRequirements = !empty(array_diff(array_keys($activeWeights), ['consistency_bonus']));
 
-        $bonus = 0;
+        if ($hasCoreRequirements) {
+            $activeWeights['consistency_bonus'] = $weights['consistency_bonus'];
+            $bonus = 0;
 
-        if (($breakdown['title'] ?? 0) >= ($weights['title'] * 0.62)) {
-            $bonus += 0.8;
+            if (isset($activeWeights['title']) && ($breakdown['title'] ?? 0) >= ($weights['title'] * 0.62)) {
+                $bonus += 0.8;
+            }
+
+            if (isset($activeWeights['experience']) && ($breakdown['experience'] ?? 0) >= ($weights['experience'] * 0.62)) {
+                $bonus += 0.5;
+            }
+
+            if (isset($activeWeights['must_have_skills']) && ($breakdown['must_have_skills'] ?? 0) >= ($weights['must_have_skills'] * 0.62)) {
+                $bonus += 0.5;
+            }
+
+            if (isset($activeWeights['location']) && ($breakdown['location'] ?? 0) >= ($weights['location'] * 0.8)) {
+                $bonus += 0.2;
+            }
+
+            $breakdown['consistency_bonus'] = round(min($weights['consistency_bonus'], $bonus), 2);
         }
-
-        if (($breakdown['experience'] ?? 0) >= ($weights['experience'] * 0.62)) {
-            $bonus += 0.5;
-        }
-
-        if (($breakdown['must_have_skills'] ?? 0) >= ($weights['must_have_skills'] * 0.62)) {
-            $bonus += 0.5;
-        }
-
-        if (($breakdown['location'] ?? 0) >= ($weights['location'] * 0.8)) {
-            $bonus += 0.2;
-        }
-
-        $breakdown['consistency_bonus'] = round(min($weights['consistency_bonus'], $bonus), 2);
 
         $rawScore = array_sum($breakdown);
         $maxScore = max(1, array_sum($activeWeights));
@@ -322,14 +346,18 @@ class LocalCvScoringService
             'score' => $score,
             'breakdown' => $breakdown,
             'summary' => $summary,
-            'explanations' => $this->buildExplanations($breakdown, $weights, $reqRole, $reqExp, $cvExp, $reqLocations),
+            'explanations' => $this->buildExplanations($breakdown, $weights, $reqRole, $reqExp, $cvExp, $reqLocations, $cvExpInfo, $cvAgeInfo),
             'meta' => [
                 'raw_score' => round($rawScore, 2),
                 'max_score' => round($maxScore, 2),
                 'required_experience_years' => $reqExp,
                 'candidate_experience_years' => $cvExp,
+                'candidate_experience_inferred' => $cvExpInfo['inferred'],
+                'candidate_experience_source' => $cvExpInfo['source'],
                 'required_age' => $ageReq,
                 'candidate_age' => $cvAge,
+                'candidate_age_inferred' => $cvAgeInfo['inferred'],
+                'candidate_age_source' => $cvAgeInfo['source'],
                 'required_locations' => $reqLocations,
             ],
         ];
@@ -339,7 +367,22 @@ class LocalCvScoringService
     {
         $text = mb_strtolower($text, 'UTF-8');
 
+        if (class_exists(\Normalizer::class)) {
+            $normalized = \Normalizer::normalize($text, \Normalizer::FORM_D);
+
+            if (is_string($normalized)) {
+                $text = preg_replace('/\p{Mn}+/u', '', $normalized) ?? $normalized;
+            }
+        }
+
         $replacements = [
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'à' => 'a', 'â' => 'a', 'ä' => 'a',
+            'î' => 'i', 'ï' => 'i',
+            'ô' => 'o', 'ö' => 'o',
+            'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c',
+            'œ' => 'oe', 'æ' => 'ae',
             'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
             'à' => 'a', 'â' => 'a',
             'î' => 'i', 'ï' => 'i',
@@ -471,15 +514,18 @@ class LocalCvScoringService
 
         $direct = $this->phraseSimilarity($required, $candidate, $pool);
 
-        $exactRole = $this->containsPhrase($candidate, $required) || $this->containsPhrase($pool, $required);
+        $exactRole = $this->containsPhrase($candidate, $required);
+        $poolMention = !$exactRole && $this->containsPhrase($pool, $required);
 
-        $familyBoost = $this->sameTitleFamily($required, $candidate, $pool) ? 0.12 : 0;
-        $siblingPenalty = $this->isSiblingRole($required, $candidate, $pool) ? 0.25 : 0;
+        $familyBoost = $this->sameTitleFamily($required, $candidate, $pool) ? 0.08 : 0;
+        $siblingPenalty = $this->isSiblingRole($required, $candidate, $pool) ? 0.35 : 0;
         $specificPenalty = $this->specificTokenPenalty($required, $candidate, $pool);
-        $conflictPenalty = $this->sameConflictGroup($required, $candidate, $pool) ? 0 : 0.18;
+        $conflictPenalty = $this->sameConflictGroup($required, $candidate, $pool) ? 0 : 0.34;
 
         if ($exactRole) {
             $direct = max($direct, 0.96);
+        } elseif ($poolMention) {
+            $direct = min(max($direct, 0.72), 0.82);
         }
 
         return max(0, min(1, $direct + $familyBoost - $siblingPenalty - $specificPenalty - $conflictPenalty));
@@ -808,25 +854,69 @@ class LocalCvScoringService
 
     private function extractCandidateExperience(array $profile, string $pool): ?float
     {
+        return $this->extractCandidateExperienceDetails($profile, $pool)['years'];
+    }
+
+    private function extractCandidateExperienceDetails(array $profile, string $pool): array
+    {
         foreach ([
             $profile['years_experience'] ?? null,
             $profile['experience_years'] ?? null,
             $profile['total_experience'] ?? null,
         ] as $value) {
             if (is_numeric($value)) {
-                return (float) $value;
+                return [
+                    'years' => (float) $value,
+                    'inferred' => false,
+                    'source' => 'champ structure',
+                    'confidence' => 1.0,
+                ];
             }
 
             if (is_string($value)) {
                 $years = $this->extractYears($value, false);
 
                 if ($years !== null) {
-                    return $years;
+                    return [
+                        'years' => $years,
+                        'inferred' => false,
+                        'source' => 'texte experience',
+                        'confidence' => 0.9,
+                    ];
                 }
             }
         }
 
-        return $this->estimateExperienceFromPeriods($pool) ?? $this->extractYears($pool, false);
+        $periodYears = $this->estimateExperienceFromPeriods($pool);
+
+        if ($periodYears !== null) {
+            return [
+                'years' => $periodYears,
+                'inferred' => true,
+                'source' => 'periodes professionnelles',
+                'confidence' => 0.78,
+            ];
+        }
+
+        $levelYears = $this->estimateExperienceFromLevel($pool);
+
+        if ($levelYears !== null) {
+            return [
+                'years' => $levelYears,
+                'inferred' => true,
+                'source' => 'niveau seniorite',
+                'confidence' => 0.68,
+            ];
+        }
+
+        $years = $this->extractYears($pool, false);
+
+        return [
+            'years' => $years,
+            'inferred' => $years !== null,
+            'source' => $years !== null ? 'texte du CV' : null,
+            'confidence' => $years !== null ? 0.72 : 0.0,
+        ];
     }
 
     private function extractYears(string $text, bool $forRequirement = false): ?float
@@ -839,6 +929,12 @@ class LocalCvScoringService
 
         if (str_contains($text, 'debutant') || str_contains($text, 'debutante')) {
             return 0.0;
+        }
+
+        $levelYears = $this->estimateExperienceFromLevel($text);
+
+        if ($levelYears !== null) {
+            return $levelYears;
         }
 
         if (preg_match('/(\d+(?:[\.,]\d+)?)\s*(?:-|a|à|to)\s*(\d+(?:[\.,]\d+)?)\s*(ans|an|years|year)/u', $text, $m)) {
@@ -864,6 +960,7 @@ class LocalCvScoringService
     {
         $text = $this->normalizeText($text);
         $currentYear = (int) date('Y');
+        $currentMonth = (int) date('n');
         $periods = [];
 
         if (preg_match_all('/\b(20[0-2]\d|19[7-9]\d)\s*[-–—]\s*(20[0-2]\d|19[7-9]\d|present|current|now|actuel|aujourd hui|presentement)\b/u', $text, $matches, PREG_SET_ORDER)) {
@@ -872,7 +969,46 @@ class LocalCvScoringService
                 $end = is_numeric($match[2]) ? (int) $match[2] : $currentYear;
 
                 if ($start >= 1970 && $start <= $currentYear && $end >= $start && $end <= $currentYear + 1) {
-                    $periods[] = [$start, $end];
+                    $periods[] = [$start * 12 + 1, $end * 12 + 12];
+                }
+            }
+        }
+
+        if (preg_match_all('/\b(\d{1,2})[\/\-.](20[0-2]\d|19[7-9]\d)\s*(?:-|a|à|to)\s*(?:(\d{1,2})[\/\-.](20[0-2]\d|19[7-9]\d)|present|current|now|actuel|aujourd hui|presentement|aujourd)\b/u', $text, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $startMonth = max(1, min(12, (int) $match[1]));
+                $startYear = (int) $match[2];
+                $endMonth = !empty($match[3]) ? max(1, min(12, (int) $match[3])) : $currentMonth;
+                $endYear = !empty($match[4]) ? (int) $match[4] : $currentYear;
+
+                if ($startYear >= 1970 && $startYear <= $currentYear && $endYear >= $startYear && $endYear <= $currentYear + 1) {
+                    $periods[] = [$startYear * 12 + $startMonth, $endYear * 12 + $endMonth];
+                }
+            }
+        }
+
+        $monthNames = '(?:jan(?:vier)?|fev(?:rier)?|fevrier|mar(?:s)?|avr(?:il)?|mai|juin|juil(?:let)?|aout|sep(?:tembre)?|oct(?:obre)?|nov(?:embre)?|dec(?:embre)?|january|february|march|april|may|june|july|august|september|october|november|december)';
+
+        if (preg_match_all('/\b(' . $monthNames . ')\s+(20[0-2]\d|19[7-9]\d)\s*(?:-|a|à|to)\s*(?:(' . $monthNames . ')\s+)?(20[0-2]\d|19[7-9]\d|present|current|now|actuel|aujourd hui|presentement|aujourd)\b/u', $text, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $startMonth = $this->monthNumber($match[1]);
+                $startYear = (int) $match[2];
+                $endIsYear = is_numeric($match[4]);
+                $endMonth = $endIsYear ? $this->monthNumber($match[3] ?: 'decembre') : $currentMonth;
+                $endYear = $endIsYear ? (int) $match[4] : $currentYear;
+
+                if ($startMonth && $endMonth && $startYear >= 1970 && $startYear <= $currentYear && $endYear >= $startYear) {
+                    $periods[] = [$startYear * 12 + $startMonth, $endYear * 12 + $endMonth];
+                }
+            }
+        }
+
+        if (preg_match_all('/(?:depuis|since)\s+(20[0-2]\d|19[7-9]\d)\b/u', $text, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $start = (int) $match[1];
+
+                if ($start >= 1970 && $start <= $currentYear) {
+                    $periods[] = [$start * 12 + 1, $currentYear * 12 + $currentMonth];
                 }
             }
         }
@@ -896,10 +1032,50 @@ class LocalCvScoringService
         $years = 0;
 
         foreach ($merged as [$start, $end]) {
-            $years += max(0, $end - $start);
+            $years += max(0, (($end - $start) + 1) / 12);
         }
 
         return $years > 0 ? round(min($years, 45), 1) : null;
+    }
+
+    private function estimateExperienceFromLevel(string $text): ?float
+    {
+        $text = $this->normalizeText($text);
+
+        if (preg_match('/\b(debutant|debutante|junior|stagiaire|entry level|entry-level|intern|trainee)\b/u', $text)) {
+            return 1.0;
+        }
+
+        if (preg_match('/\b(confirme|confirmee|intermediaire|intermediate|mid level|mid-level)\b/u', $text)) {
+            return 4.0;
+        }
+
+        if (preg_match('/\b(senior|experimente|experimentee|expert|lead|principal)\b/u', $text)) {
+            return 6.0;
+        }
+
+        return null;
+    }
+
+    private function monthNumber(string $month): ?int
+    {
+        $month = $this->normalizeText($month);
+        $map = [
+            'jan' => 1, 'janvier' => 1, 'january' => 1,
+            'fev' => 2, 'fevrier' => 2, 'february' => 2,
+            'mar' => 3, 'mars' => 3, 'march' => 3,
+            'avr' => 4, 'avril' => 4, 'april' => 4,
+            'mai' => 5, 'may' => 5,
+            'juin' => 6, 'june' => 6,
+            'juil' => 7, 'juillet' => 7, 'july' => 7,
+            'aout' => 8, 'august' => 8,
+            'sep' => 9, 'septembre' => 9, 'september' => 9,
+            'oct' => 10, 'octobre' => 10, 'october' => 10,
+            'nov' => 11, 'novembre' => 11, 'november' => 11,
+            'dec' => 12, 'decembre' => 12, 'december' => 12,
+        ];
+
+        return $map[$month] ?? null;
     }
 
     private function normalizeAgeRequirement($value): array
@@ -970,6 +1146,11 @@ class LocalCvScoringService
 
     private function extractCandidateAge(array $profile, string $pool): ?int
     {
+        return $this->extractCandidateAgeDetails($profile, $pool)['age'];
+    }
+
+    private function extractCandidateAgeDetails(array $profile, string $pool): array
+    {
         foreach ([
             $profile['age'] ?? null,
             $profile['candidate_age'] ?? null,
@@ -978,7 +1159,12 @@ class LocalCvScoringService
                 $age = (int) $value;
 
                 if ($age >= 16 && $age <= 70) {
-                    return $age;
+                    return [
+                        'age' => $age,
+                        'inferred' => false,
+                        'source' => 'champ structure',
+                        'confidence' => 1.0,
+                    ];
                 }
             }
         }
@@ -987,29 +1173,75 @@ class LocalCvScoringService
             $age = (int) $m[1];
 
             if ($age >= 16 && $age <= 70) {
-                return $age;
+                return [
+                    'age' => $age,
+                    'inferred' => false,
+                    'source' => 'age explicite',
+                    'confidence' => 0.92,
+                ];
             }
         }
 
-        if (preg_match('/(?:ne|nee|naissance|born).*?(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/u', $pool, $m)) {
-            $year = (int) $m[3];
-            $age = (int) date('Y') - $year;
+        $birthDate = $this->extractBirthDate($pool);
 
-            if ($age >= 16 && $age <= 70) {
-                return $age;
+        if ($birthDate) {
+            $age = $this->ageFromDate($birthDate);
+
+            if ($age !== null) {
+                return [
+                    'age' => $age,
+                    'inferred' => true,
+                    'source' => 'date de naissance',
+                    'confidence' => 0.86,
+                ];
             }
         }
 
-        if (preg_match('/\b(19[5-9]\d|20[0-1]\d)\b/u', $pool, $m)) {
-            $year = (int) $m[1];
-            $age = (int) date('Y') - $year;
+        return [
+            'age' => null,
+            'inferred' => false,
+            'source' => null,
+            'confidence' => 0.0,
+        ];
+    }
 
-            if ($age >= 16 && $age <= 70) {
-                return $age;
-            }
+    private function extractBirthDate(string $text): ?array
+    {
+        $text = $this->normalizeText($text);
+        $birthPrefix = '(?:ne|nee|naissance|date de naissance|born|birth|date of birth)';
+
+        if (preg_match('/' . $birthPrefix . '[^\d]{0,24}(\d{1,2})[\/\-.](\d{1,2})[\/\-.](19[5-9]\d|20[0-1]\d)/u', $text, $m)) {
+            return ['year' => (int) $m[3], 'month' => (int) $m[2], 'day' => (int) $m[1]];
+        }
+
+        if (preg_match('/' . $birthPrefix . '[^\d]{0,24}(19[5-9]\d|20[0-1]\d)[\/\-.](\d{1,2})[\/\-.](\d{1,2})/u', $text, $m)) {
+            return ['year' => (int) $m[1], 'month' => (int) $m[2], 'day' => (int) $m[3]];
+        }
+
+        if (preg_match('/' . $birthPrefix . '[^\d]{0,24}(19[5-9]\d|20[0-1]\d)\b/u', $text, $m)) {
+            return ['year' => (int) $m[1], 'month' => 1, 'day' => 1];
         }
 
         return null;
+    }
+
+    private function ageFromDate(array $birthDate): ?int
+    {
+        $year = (int) ($birthDate['year'] ?? 0);
+        $month = max(1, min(12, (int) ($birthDate['month'] ?? 1)));
+        $day = max(1, min(31, (int) ($birthDate['day'] ?? 1)));
+
+        if ($year < 1950 || $year > (int) date('Y')) {
+            return null;
+        }
+
+        $age = (int) date('Y') - $year;
+
+        if (((int) date('n') < $month) || ((int) date('n') === $month && (int) date('j') < $day)) {
+            $age--;
+        }
+
+        return $age >= 16 && $age <= 70 ? $age : null;
     }
 
     private function extractRequiredLocations(array $requirements): array
@@ -1047,7 +1279,7 @@ class LocalCvScoringService
             }
         }
 
-        return min(0.22, $misses * 0.08);
+        return min(0.36, $misses * 0.12);
     }
 
     private function extractSpecificTitleTokens(string $text): array
@@ -1096,7 +1328,16 @@ class LocalCvScoringService
         return true;
     }
 
-    private function buildExplanations(array $breakdown, array $weights, string $reqRole, ?float $reqExp, ?float $cvExp, array $reqLocations): array
+    private function buildExplanations(
+        array $breakdown,
+        array $weights,
+        string $reqRole,
+        ?float $reqExp,
+        ?float $cvExp,
+        array $reqLocations,
+        array $cvExpInfo = [],
+        array $cvAgeInfo = []
+    ): array
     {
         $explanations = [];
 
@@ -1108,9 +1349,21 @@ class LocalCvScoringService
         }
 
         if (!is_null($reqExp)) {
-            $explanations['experience'] = is_null($cvExp)
-                ? 'Experience du candidat non detectee clairement.'
-                : 'Experience estimee a ' . round($cvExp, 1) . ' an(s) pour un besoin d environ ' . round($reqExp, 1) . ' an(s).';
+            if (is_null($cvExp)) {
+                $explanations['experience'] = 'Experience du candidat non detectee clairement.';
+            } else {
+                $source = !empty($cvExpInfo['inferred'])
+                    ? ' estimee par ' . ($cvExpInfo['source'] ?? 'inference')
+                    : ' detectee';
+                $explanations['experience'] = 'Experience' . $source . ' a ' . round($cvExp, 1) . ' an(s) pour un besoin d environ ' . round($reqExp, 1) . ' an(s).';
+            }
+        }
+
+        if (!empty($cvAgeInfo['age'])) {
+            $source = !empty($cvAgeInfo['inferred'])
+                ? ' estime depuis ' . ($cvAgeInfo['source'] ?? 'la date de naissance')
+                : ' detecte';
+            $explanations['age'] = 'Age' . $source . ' : ' . (int) $cvAgeInfo['age'] . ' ans.';
         }
 
         if (!empty($reqLocations)) {

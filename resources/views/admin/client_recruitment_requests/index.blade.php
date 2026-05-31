@@ -37,6 +37,17 @@
                     </select>
                 </div>
 
+                <div class="table-filter">
+                    <select name="assignment">
+                        <option value="all" @selected(($assignment ?? 'all') === 'all')>Toutes les affectations</option>
+                        <option value="assigned_unseen" @selected(($assignment ?? '') === 'assigned_unseen')>Affectations non vues</option>
+                        <option value="assigned" @selected(($assignment ?? '') === 'assigned')>Demandes assignees</option>
+                        <option value="assigned_in_progress" @selected(($assignment ?? '') === 'assigned_in_progress')>Assignations en cours</option>
+                        <option value="assigned_completed" @selected(($assignment ?? '') === 'assigned_completed')>Assignations terminees</option>
+                        <option value="unassigned" @selected(($assignment ?? '') === 'unassigned')>Non assignees</option>
+                    </select>
+                </div>
+
                 <div class="table-ctrl-actions">
                     <button class="btn btn-primary btn-sm" type="submit">Filtrer</button>
                 </div>
@@ -58,10 +69,11 @@
                     <tr>
                         <th>Client</th>
                         <th>Poste</th>
-                        <th>Reference</th>
-                        <th>Statut</th>
-                        <th>Traitement</th>
                         <th>Date</th>
+                        <th>Statut</th>
+                        <th>Pipeline</th>
+                        <th>Assignation</th>
+                        <th>Traitement</th>
                         <th class="th-actions">Action</th>
                     </tr>
                 </thead>
@@ -69,38 +81,72 @@
                     @forelse($requests as $requestItem)
                         <tr>
                             <td>
-                                <div class="cell-main">
+                                <div class="cell-main request-logo-cell">
+                                    <span class="request-logo-thumb">
+                                        @if($requestItem->logo_url)
+                                            <img src="{{ $requestItem->logo_url }}" alt="{{ $requestItem->client_name }}">
+                                        @else
+                                            {{ strtoupper(substr($requestItem->client_name ?: 'R', 0, 1)) }}
+                                        @endif
+                                    </span>
+                                    <span>
                                     <div class="cell-title">{{ $requestItem->client_name ?: $requestItem->clientUser?->name ?: '-' }}</div>
                                     <div class="cell-sub">{{ $requestItem->clientUser?->email ?: '-' }}</div>
+                                    </span>
                                 </div>
                             </td>
-                            <td>{{ $requestItem->position_title }}</td>
-                            <td>{{ $requestItem->reference ?: '-' }}</td>
+                            <td>
+                                <div class="cell-main">
+                                    <div class="cell-title">{{ $requestItem->position_title }}</div>
+                                    <div class="cell-sub">Ref: {{ $requestItem->reference ?: '-' }}</div>
+                                </div>
+                            </td>
+                            <td>{{ optional($requestItem->request_date)->format('d/m/Y') ?: $requestItem->created_at->format('d/m/Y') }}</td>
                             <td>
                                 <span class="pill {{ $statusTone($requestItem->request_status) }}">
                                     {{ $statuses[$requestItem->request_status] ?? $requestItem->request_status }}
                                 </span>
                             </td>
                             <td>
-                                @if($requestItem->matches_count > 0)
-                                    <span class="pill pill-success">{{ $requestItem->matches_count }} match(es)</span>
+                                <span class="pill pill-neutral">
+                                    {{ \App\Models\RecruitmentRequest::availablePipelineStages()[$requestItem->pipeline_stage] ?? 'Nouvelle demande' }}
+                                </span>
+                            </td>
+                            <td>
+                                @if($requestItem->assignedEmployee)
+                                    <div class="cell-main">
+                                        <div class="cell-title">{{ $requestItem->assignedEmployee->name }}</div>
+                                        <div class="cell-sub">
+                                            {{ \App\Models\RecruitmentRequest::availableAssignmentStatuses()[$requestItem->assignment_status] ?? 'Assignee' }}
+                                        </div>
+                                    </div>
                                 @else
-                                    <span class="pill pill-neutral">En attente de matching</span>
+                                    <span class="pill pill-danger">Non assignee</span>
                                 @endif
                             </td>
-                            <td>{{ optional($requestItem->request_date)->format('d/m/Y') ?: $requestItem->created_at->format('d/m/Y') }}</td>
+                            <td>
+                                @if($requestItem->matching_job_status)
+                                    <span class="pill pill-neutral">
+                                        {{ \App\Models\RecruitmentRequest::availableJobStatuses()[$requestItem->matching_job_status] ?? $requestItem->matching_job_status }}
+                                    </span>
+                                @elseif($requestItem->matches_count > 0)
+                                    <span class="pill pill-success">{{ $requestItem->matches_count }} match(es)</span>
+                                @else
+                                    <span class="pill pill-neutral">A lancer</span>
+                                @endif
+                            </td>
                             <td class="td-actions">
+                                <a href="{{ route('admin.client-recruitment-requests.edit', $requestItem) }}" class="btn btn-primary btn-sm">
+                                    Ouvrir
+                                </a>
                                 <a href="{{ route('admin.recruitment_requests.create', ['client_request' => $requestItem->id]) }}" class="btn btn-ghost btn-sm">
                                     Matching
-                                </a>
-                                <a href="{{ route('admin.client-recruitment-requests.edit', $requestItem) }}" class="btn btn-primary btn-sm">
-                                    Gerer
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="table-empty">
                                     <div class="table-empty-title">Aucune demande client trouvee.</div>
                                     <div class="table-empty-sub">Les nouvelles demandes apparaitront ici et seront marquees comme vues a l ouverture de cette page.</div>

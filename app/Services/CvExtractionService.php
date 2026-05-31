@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\IOFactory;
-use Smalot\PdfParser\Parser as PdfParser;
+use Symfony\Component\Process\Process;
 
 class CvExtractionService
 {
@@ -19,7 +19,7 @@ class CvExtractionService
 
         try {
             if ($extension === 'pdf') {
-                return trim((new PdfParser())->parseFile($filePath)->getText());
+                return $this->extractPdfTextInIsolatedProcess($filePath);
             }
 
             if (in_array($extension, ['doc', 'docx'], true)) {
@@ -98,5 +98,44 @@ class CvExtractionService
         }
 
         return $text;
+    }
+
+    private function extractPdfTextInIsolatedProcess(string $filePath): string
+    {
+        if (!is_file($filePath) || !is_readable($filePath)) {
+            return '';
+        }
+
+        $outputPath = Storage::disk('local')->path('temp/cv-extraction/' . uniqid('pdf_text_', true) . '.txt');
+        $memoryLimit = (string) config('external_cv_parser.pdf_extraction_memory_limit', '384M');
+        $timeout = (int) config('external_cv_parser.pdf_extraction_timeout', 90);
+
+        $process = new Process([
+            PHP_BINARY,
+            '-d',
+            'memory_limit=' . $memoryLimit,
+            base_path('artisan'),
+            'cvs:extract-pdf-text',
+            $filePath,
+            $outputPath,
+        ], base_path());
+
+        $process->setTimeout(max(30, $timeout));
+
+        try {
+            $process->run();
+
+            if (!$process->isSuccessful() || !is_file($outputPath)) {
+                return '';
+            }
+
+            return trim((string) file_get_contents($outputPath));
+        } catch (\Throwable $e) {
+            return '';
+        } finally {
+            if (is_file($outputPath)) {
+                @unlink($outputPath);
+            }
+        }
     }
 }

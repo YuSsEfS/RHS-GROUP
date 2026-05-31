@@ -2,6 +2,10 @@
 
 return [
 
+    'pdf_extraction_memory_limit' => env('PDF_EXTRACTION_MEMORY_LIMIT', '512M'),
+    'pdf_extraction_timeout' => env('PDF_EXTRACTION_TIMEOUT', 90),
+    'pdf_max_parse_size_bytes' => (int) env('PDF_MAX_PARSE_SIZE_BYTES', 25 * 1024 * 1024),
+
     /*
     |--------------------------------------------------------------------------
     | Moroccan cities + zones
@@ -42,8 +46,8 @@ return [
         'belvédère' => 'Casablanca',
         'la villette' => 'Casablanca',
         'californie' => 'Casablanca',
-        'bouskoura' => 'Casablanca',
-        'nouaceur' => 'Casablanca',
+        'bouskoura' => 'Bouskoura',
+        'nouaceur' => 'Nouaceur',
         'dar bouazza' => 'Casablanca',
         'ain diab' => 'Casablanca',
         'aïn diab' => 'Casablanca',
@@ -53,8 +57,8 @@ return [
         'médiouna' => 'Casablanca',
         'ain harrouda' => 'Casablanca',
         'aïn harrouda' => 'Casablanca',
-        'mohammedia' => 'Casablanca',
-        'berrechid' => 'Casablanca',
+        'mohammedia' => 'Mohammedia',
+        'berrechid' => 'Berrechid',
         'had soualem' => 'Casablanca',
         'deroua' => 'Casablanca',
         'lahraouyine' => 'Casablanca',
@@ -588,6 +592,10 @@ return [
         'responsabilités', 'societe', 'société', 'entreprise',
         'company', 'group', 'groupe', 'formation', 'experience',
         'expérience', 'competences', 'compétences', 'profil',
+        'ecoute', 'écoute', 'precision', 'précision', 'rigueur',
+        'serieux', 'sérieux', 'ponctuel', 'rapide',
+        'sens de la relation client', 'capacite d adaptation',
+        'capacité d adaptation', 'travail en equipe', 'travail en équipe',
     ],
 
     'company_words' => [

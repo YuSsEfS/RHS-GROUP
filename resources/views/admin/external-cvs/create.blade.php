@@ -20,238 +20,6 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
 
 @section('content')
 
-<style>
-  .external-form-grid{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:18px;
-  }
-
-  .external-form-item.full{
-    grid-column:1 / -1;
-  }
-
-  .external-input,
-  .external-select,
-  .external-textarea{
-    width:100%;
-    padding:13px 14px;
-    border:1px solid #dbe2ea;
-    border-radius:14px;
-    background:#fff;
-    color:#0f172a;
-    font:inherit;
-    outline:none;
-    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
-  }
-
-  .external-input,
-  .external-select{
-    height:48px;
-  }
-
-  .external-input:focus,
-  .external-select:focus,
-  .external-textarea:focus{
-    border-color:#94a3b8;
-    box-shadow:0 0 0 4px rgba(148,163,184,.14);
-  }
-
-  .external-textarea{
-    min-height:120px;
-    resize:vertical;
-  }
-
-  .upload-zone{
-    position:relative;
-    border:1.5px dashed #cbd5e1;
-    background:linear-gradient(180deg,#fbfdff 0%,#f8fafc 100%);
-    border-radius:18px;
-    padding:26px;
-    transition:border-color .18s ease, background .18s ease, transform .18s ease;
-  }
-
-  .upload-zone.dragover{
-    border-color:#ef4444;
-    background:#fff5f5;
-    transform:translateY(-1px);
-  }
-
-  .upload-zone-inner{
-    text-align:center;
-    max-width:760px;
-    margin:0 auto;
-  }
-
-  .upload-icon{
-    width:56px;
-    height:56px;
-    margin:0 auto 14px;
-    border-radius:16px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#fef2f2;
-    color:#ef4444;
-  }
-
-  .upload-title{
-    margin:0 0 8px;
-    font-size:18px;
-    font-weight:800;
-    color:#0f172a;
-  }
-
-  .upload-subtitle{
-    margin:0 0 18px;
-    color:#64748b;
-    line-height:1.55;
-  }
-
-  .upload-actions{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:12px;
-    margin-bottom:14px;
-  }
-
-  .upload-hidden{
-    display:none;
-  }
-
-  .upload-hint{
-    color:#64748b;
-    font-size:13px;
-    margin-top:8px;
-  }
-
-  .upload-list{
-    margin-top:18px;
-    display:grid;
-    gap:10px;
-
-    /* max 4 rows visible */
-    max-height:360px;
-    overflow-y:auto;
-    overflow-x:hidden;
-    padding-right:8px;
-    scroll-behavior:smooth;
-  }
-
-  .upload-list::-webkit-scrollbar{
-    width:8px;
-  }
-
-  .upload-list::-webkit-scrollbar-track{
-    background:#f1f5f9;
-    border-radius:999px;
-  }
-
-  .upload-list::-webkit-scrollbar-thumb{
-    background:#cbd5e1;
-    border-radius:999px;
-  }
-
-  .upload-list::-webkit-scrollbar-thumb:hover{
-    background:#94a3b8;
-  }
-
-  .upload-file{
-    min-height:78px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    padding:12px 14px;
-    border:1px solid #e2e8f0;
-    border-radius:14px;
-    background:#fff;
-  }
-
-  .upload-file-info{
-    min-width:0;
-  }
-
-  .upload-file-name{
-    font-weight:700;
-    color:#0f172a;
-    word-break:break-word;
-  }
-
-  .upload-file-meta{
-    color:#64748b;
-    font-size:13px;
-    margin-top:4px;
-    word-break:break-word;
-  }
-
-  .upload-empty{
-    padding:14px 16px;
-    border-radius:14px;
-    background:#f8fafc;
-    color:#64748b;
-    text-align:center;
-    border:1px dashed #e2e8f0;
-  }
-
-  .upload-summary{
-    margin-top:14px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:10px 14px;
-    border-radius:14px;
-    background:#fff;
-    border:1px solid #e2e8f0;
-    color:#475569;
-    font-size:14px;
-  }
-
-  .upload-summary strong{
-    color:#0f172a;
-  }
-
-  .field-help{
-    color:#64748b;
-    font-size:13px;
-    line-height:1.5;
-    margin-top:6px;
-  }
-
-  .field-error{
-    margin-top:8px;
-    color:#dc2626;
-    font-size:14px;
-    font-weight:600;
-  }
-
-  .soft-note{
-    padding:12px 14px;
-    border-radius:14px;
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
-    color:#475569;
-    font-size:14px;
-    line-height:1.55;
-  }
-
-  @media (max-width: 900px){
-    .external-form-grid{
-      grid-template-columns:1fr;
-    }
-
-    .external-form-item.full{
-      grid-column:auto;
-    }
-
-    .upload-list{
-      max-height:340px;
-    }
-  }
-</style>
-
 <div class="panel">
   <div class="panel-head">
     <div class="panel-title">Créer un lot externe</div>
@@ -344,7 +112,10 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
               </div>
 
               <div class="upload-hint">
-                Formats acceptés : PDF, DOC, DOCX, TXT — taille max par fichier : 10 Mo
+                Formats acceptes : PDF, DOC, DOCX, TXT - taille max par fichier : 50 Mo
+              </div>
+              <div class="upload-large-note">
+                Mode grand volume : envoi par lots de 20 fichiers, affichage limite pour garder le navigateur fluide.
               </div>
             </div>
 
@@ -355,7 +126,6 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
               class="upload-hidden"
               accept=".pdf,.doc,.docx,.txt"
               multiple
-              required
             >
 
             <input
@@ -370,6 +140,7 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
             <div class="upload-summary" id="uploadSummary" style="display:none;">
               <div><strong id="uploadCount">0</strong> fichier(s) sélectionné(s)</div>
               <div>Total : <strong id="uploadTotalSize">0 KB</strong></div>
+              <button type="button" class="btn btn-ghost btn-sm" id="clearUploadSelection">Vider</button>
             </div>
 
             <div class="upload-list" id="uploadList">
@@ -407,9 +178,19 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
     const uploadSummary = document.getElementById('uploadSummary');
     const uploadCount = document.getElementById('uploadCount');
     const uploadTotalSize = document.getElementById('uploadTotalSize');
+    const clearUploadSelection = document.getElementById('clearUploadSelection');
     const batchNameInput = document.getElementById('batch_name');
 
+    const MAX_FILES = 50000;
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    const MAX_VISIBLE_FILES = 200;
+
     let currentFiles = [];
+    let selectionMessage = '';
+
+    window.rhsExternalUploadFiles = function () {
+      return currentFiles;
+    };
 
     function formatSize(bytes) {
       const units = ['B', 'KB', 'MB', 'GB'];
@@ -429,6 +210,10 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
       return ['.pdf', '.doc', '.docx', '.txt'].some(ext => name.endsWith(ext));
     }
 
+    function isAllowedSize(file) {
+      return (file.size || 0) <= MAX_FILE_SIZE;
+    }
+
     function dedupeFiles(files) {
       const map = new Map();
 
@@ -445,9 +230,8 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
     }
 
     function syncInputFiles() {
-      const dt = new DataTransfer();
-      currentFiles.forEach(file => dt.items.add(file));
-      fileInput.files = dt.files;
+      // Do not build a native DataTransfer with thousands of files.
+      // The chunk uploader reads currentFiles directly and keeps the browser responsive.
     }
 
     function maybeSetBatchNameFromFolder() {
@@ -491,7 +275,10 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
         return;
       }
 
-      uploadList.innerHTML = currentFiles.map((file, index) => {
+      const visibleFiles = currentFiles.slice(0, MAX_VISIBLE_FILES);
+      const hiddenCount = Math.max(0, currentFiles.length - visibleFiles.length);
+
+      uploadList.innerHTML = visibleFiles.map((file, index) => {
         const relative = file.webkitRelativePath
           ? `<div class="upload-file-meta">${escapeHtml(file.webkitRelativePath)}</div>`
           : '';
@@ -509,7 +296,13 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
             </button>
           </div>
         `;
-      }).join('');
+      }).join('')
+        + (hiddenCount > 0
+          ? `<div class="upload-more">+ ${hiddenCount} fichier(s) non affiches pour garder la page fluide.</div>`
+          : '')
+        + (selectionMessage
+          ? `<div class="upload-large-note is-warning">${escapeHtml(selectionMessage)}</div>`
+          : '');
 
       uploadList.querySelectorAll('.btn-remove-file').forEach(btn => {
         btn.addEventListener('click', function () {
@@ -522,9 +315,26 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
     }
 
     function addFiles(fileList) {
-      const incoming = Array.from(fileList).filter(isAllowed);
+      const rawFiles = Array.from(fileList);
+      const rejectedByType = rawFiles.filter(file => !isAllowed(file));
+      const rejectedBySize = rawFiles.filter(file => isAllowed(file) && !isAllowedSize(file));
+      const incoming = rawFiles.filter(file => isAllowed(file) && isAllowedSize(file));
 
-      currentFiles = dedupeFiles([...currentFiles, ...incoming]);
+      const merged = dedupeFiles([...currentFiles, ...incoming]);
+      selectionMessage = '';
+
+      if (rejectedByType.length || rejectedBySize.length) {
+        const typeMessage = rejectedByType.length ? `${rejectedByType.length} fichier(s) ignore(s): format non autorise.` : '';
+        const sizeMessage = rejectedBySize.length ? `${rejectedBySize.length} fichier(s) ignore(s): plus de 50 Mo.` : '';
+        selectionMessage = [typeMessage, sizeMessage].filter(Boolean).join(' ');
+      }
+
+      if (merged.length > MAX_FILES) {
+        currentFiles = merged.slice(0, MAX_FILES);
+        selectionMessage = `${selectionMessage ? selectionMessage + ' ' : ''}Selection limitee a ${MAX_FILES} CV pour proteger le navigateur. Importez le reste dans un deuxieme lot.`;
+      } else {
+        currentFiles = merged;
+      }
 
       syncInputFiles();
       maybeSetBatchNameFromFolder();
@@ -548,6 +358,14 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
 
     pickFolderBtn.addEventListener('click', function () {
       folderInput.click();
+    });
+
+    clearUploadSelection?.addEventListener('click', function () {
+      currentFiles = [];
+      selectionMessage = '';
+      fileInput.value = '';
+      folderInput.value = '';
+      renderList();
     });
 
     fileInput.addEventListener('change', function (e) {
@@ -589,32 +407,38 @@ Importez plusieurs CV dans un lot externe avant de lancer l’indexation.
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('external-upload-form');
     const fileInput = document.getElementById('cv_files');
-    const folderInput = document.getElementById('cv_folder_picker');
 
     if (!form || !fileInput) return;
 
     const submitBtn = form.querySelector('button[type="submit"]');
     const chunkSize = 20;
+    const maxRetries = 2;
+    const uploadState = {
+        signature: '',
+        batchId: null,
+        nextChunkIndex: 0,
+    };
 
     const progressBox = document.createElement('div');
+    progressBox.className = 'ui-progress-card';
     progressBox.style.marginTop = '18px';
-    progressBox.style.padding = '14px';
-    progressBox.style.border = '1px solid #e2e8f0';
-    progressBox.style.borderRadius = '14px';
-    progressBox.style.background = '#f8fafc';
     progressBox.style.display = 'none';
 
     progressBox.innerHTML = `
         <strong id="chunkProgressText">Préparation...</strong>
-        <div style="height:10px;background:#e5e7eb;border-radius:999px;margin-top:10px;overflow:hidden;">
-            <div id="chunkProgressBar" style="height:100%;width:0%;background:#ef4444;border-radius:999px;"></div>
+        <div class="ui-progress-track">
+            <div id="chunkProgressBar" class="ui-progress-bar" style="width:0%;"></div>
         </div>
+        <div id="chunkProgressMeta" class="ui-progress-copy"></div>
+        <div id="chunkProgressError" class="ui-progress-error" style="display:none;"></div>
     `;
 
     form.appendChild(progressBox);
 
     const progressText = document.getElementById('chunkProgressText');
     const progressBar = document.getElementById('chunkProgressBar');
+    const progressMeta = document.getElementById('chunkProgressMeta');
+    const progressError = document.getElementById('chunkProgressError');
 
     function chunkArray(array, size) {
         const chunks = [];
@@ -626,10 +450,84 @@ document.addEventListener('DOMContentLoaded', function () {
         return chunks;
     }
 
-    form.addEventListener('submit', async function (e) {
-        const files = Array.from(fileInput.files || []);
+    function filesSignature(files) {
+        return files.length + ':' + files.slice(0, 80).map(file => [
+            file.webkitRelativePath || file.name,
+            file.size,
+            file.lastModified,
+        ].join('|')).join('::');
+    }
 
-        if (files.length <= chunkSize) {
+    function sleep(ms) {
+        return new Promise(resolve => window.setTimeout(resolve, ms));
+    }
+
+    function chunkFileNames(chunk) {
+        const names = chunk.slice(0, 6).map(file => file.webkitRelativePath || file.name).join(', ');
+        const hidden = chunk.length > 6 ? ` + ${chunk.length - 6} autre(s)` : '';
+
+        return names + hidden;
+    }
+
+    async function readResponseMessage(response) {
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.includes('application/json')) {
+            const payload = await response.json().catch(() => null);
+            const errors = payload?.errors
+                ? Object.values(payload.errors).flat().filter(Boolean).join(' ')
+                : '';
+
+            return errors || payload?.message || `HTTP ${response.status}`;
+        }
+
+        const text = await response.text().catch(() => '');
+        const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+        return cleanText ? cleanText.slice(0, 500) : `HTTP ${response.status}`;
+    }
+
+    async function sendChunk(formData, chunk, chunkNumber, totalChunks) {
+        for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: formData
+            });
+
+            if (response.ok) {
+                return response.json();
+            }
+
+            const message = await readResponseMessage(response);
+            const canRetry = response.status >= 500 || response.status === 408 || response.status === 429;
+
+            if (canRetry && attempt <= maxRetries) {
+                progressMeta.textContent = `Chunk ${chunkNumber}/${totalChunks} en erreur temporaire. Nouvelle tentative ${attempt}/${maxRetries}...`;
+                await sleep(1200 * attempt);
+                continue;
+            }
+
+            throw new Error(`Chunk ${chunkNumber}/${totalChunks}: ${message}. Fichiers: ${chunkFileNames(chunk)}`);
+        }
+    }
+
+    form.addEventListener('submit', async function (e) {
+        const trackedFiles = typeof window.rhsExternalUploadFiles === 'function'
+            ? window.rhsExternalUploadFiles()
+            : [];
+        const files = trackedFiles.length ? trackedFiles : Array.from(fileInput.files || []);
+
+        if (!files.length) {
+            e.preventDefault();
+            progressBox.style.display = 'block';
+            progressText.textContent = 'Aucun fichier selectionne.';
+            progressBar.style.width = '0%';
+            progressMeta.textContent = 'Choisissez des fichiers ou un dossier avant de lancer l import.';
             return;
         }
 
@@ -637,16 +535,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const csrf = form.querySelector('input[name="_token"]').value;
         const chunks = chunkArray(files, chunkSize);
+        const signature = filesSignature(files);
 
-        let batchId = null;
-        let uploaded = 0;
+        if (uploadState.signature !== signature) {
+            uploadState.signature = signature;
+            uploadState.batchId = null;
+            uploadState.nextChunkIndex = 0;
+        }
+
+        let batchId = uploadState.batchId;
+        let uploaded = uploadState.nextChunkIndex * chunkSize;
 
         submitBtn.disabled = true;
         submitBtn.textContent = 'Importation en cours...';
         progressBox.style.display = 'block';
+        progressError.style.display = 'none';
+        progressError.textContent = '';
+        progressMeta.textContent = `${chunks.length} lot(s) de ${chunkSize} fichier(s) seront envoyes. Reprise au lot ${uploadState.nextChunkIndex + 1}. L indexation continuera ensuite dans la file d attente.`;
 
         try {
-            for (let i = 0; i < chunks.length; i++) {
+            for (let i = uploadState.nextChunkIndex; i < chunks.length; i++) {
                 const formData = new FormData();
 
                 formData.append('_token', csrf);
@@ -665,46 +573,45 @@ document.addEventListener('DOMContentLoaded', function () {
                     formData.append('cv_files[]', file);
                 });
 
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
+                progressText.textContent = `Envoi du chunk ${i + 1}/${chunks.length}...`;
+                progressMeta.textContent = `Fichiers du chunk: ${chunkFileNames(chunks[i])}`;
 
-                if (!response.ok) {
-                    throw new Error('Erreur pendant le chunk ' + (i + 1));
-                }
-
-                const result = await response.json();
+                const result = await sendChunk(formData, chunks[i], i + 1, chunks.length);
 
                 if (!batchId) {
                     batchId = result.batch_id;
+                    uploadState.batchId = batchId;
                 }
 
                 uploaded += chunks[i].length;
+                uploadState.nextChunkIndex = i + 1;
 
                 const percent = Math.round((uploaded / files.length) * 100);
 
                 progressText.textContent = `Importation ${uploaded}/${files.length} CV...`;
+                progressMeta.textContent = `Lot ${i + 1}/${chunks.length} envoye. Le traitement lourd reste cote queue.`;
                 progressBar.style.width = percent + '%';
 
                 if (i === chunks.length - 1) {
-                    progressText.textContent = 'Importation terminée. Redirection...';
+                    progressText.textContent = 'Importation terminee. Redirection...';
+                    progressMeta.textContent = 'Le lot est cree. L indexation continuera avec le worker de queue.';
                     progressBar.style.width = '100%';
+                    uploadState.batchId = null;
+                    uploadState.nextChunkIndex = 0;
 
                     window.location.href = result.redirect_url;
                 }
             }
         } catch (error) {
-            alert(error.message);
-
             submitBtn.disabled = false;
             submitBtn.textContent = 'Importer le lot';
+            progressText.textContent = 'Erreur pendant l importation.';
+            progressMeta.textContent = batchId
+                ? `Les chunks deja envoyes restent dans le lot #${batchId}. Corrigez le fichier indique si besoin, puis relancez: l upload reprendra au chunk ${uploadState.nextChunkIndex + 1}.`
+                : 'Aucun fichier supplementaire ne sera envoye tant que vous ne relancez pas.';
+            progressError.textContent = error.message || 'Erreur inconnue.';
+            progressError.style.display = 'block';
 
-            progressText.textContent = 'Erreur pendant l’importation.';
         }
     });
 });

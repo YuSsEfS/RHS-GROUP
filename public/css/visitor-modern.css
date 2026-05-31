@@ -1,0 +1,1896 @@
+:root {
+  --rhs-modern-bg: oklch(0.995 0.003 60);
+  --rhs-modern-ink: oklch(0.13 0.05 260);
+  --rhs-modern-muted: oklch(0.48 0.02 260);
+  --rhs-modern-primary: oklch(0.62 0.22 25);
+  --rhs-modern-primary-strong: oklch(0.55 0.24 18);
+  --rhs-modern-primary-soft: oklch(0.95 0.04 25);
+  --rhs-modern-border: oklch(0.91 0.01 60);
+  --rhs-modern-surface: rgba(255, 255, 255, 0.84);
+  --rhs-modern-gradient: linear-gradient(135deg, var(--rhs-modern-primary), var(--rhs-modern-primary-strong));
+  --rhs-modern-hero-glow: radial-gradient(1200px 600px at 82% 18%, oklch(0.62 0.22 25 / 0.18), transparent 62%);
+  --rhs-modern-shadow-soft: 0 18px 34px oklch(0.62 0.22 25 / 0.18);
+  --rhs-modern-shadow-card: 0 28px 70px rgba(16, 24, 40, 0.12);
+  --rhs-modern-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body:has(.about-page),
+body:has(.services-page),
+body:has(.contact-page),
+body:has(.apply-page),
+body:has(.jobs-page),
+body:has(.job-detail-page),
+body:has(.formation-page),
+.about-page,
+.services-page,
+.contact-page,
+.apply-page,
+.jobs-page,
+.job-detail-page,
+.formation-page {
+  background: var(--rhs-modern-bg);
+  color: var(--rhs-modern-ink);
+  font-family: Inter, Figtree, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.about-page,
+.services-page,
+.contact-page,
+.apply-page,
+.jobs-page,
+.job-detail-page,
+.formation-page {
+  overflow: hidden;
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) .container {
+  width: min(1280px, calc(100% - 40px));
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) *,
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) *::before,
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) *::after {
+  box-sizing: border-box;
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) :is(img, video, iframe) {
+  max-width: 100%;
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) :is(input, select, textarea, button) {
+  max-width: 100%;
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) :is(h1, h2, h3, .section-title, .jobs-title, .services-title, .contact-title, .apply-title, .job-detail-title, .formation-title, .catalogue-title) {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--rhs-modern-ink);
+}
+
+.about-page :is(section, .about-hero),
+.services-page :is(section, .services-hero),
+.contact-page :is(section, .contact-hero),
+.apply-page :is(section, .apply-hero),
+.jobs-page :is(section, .jobs-hero, .catalogue-hero),
+.job-detail-page :is(section, .job-detail-hero),
+.formation-page :is(section, .formation-hero) {
+  scroll-margin-top: calc(var(--rhs-header-height, 150px) + 20px);
+}
+
+.services-hero,
+.contact-hero,
+.apply-hero,
+.jobs-hero,
+.catalogue-hero,
+.job-detail-hero,
+.formation-hero,
+.about-hero {
+  min-height: 82vh !important;
+  height: auto !important;
+  display: flex;
+  align-items: center;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--rhs-modern-ink) !important;
+  padding: clamp(76px, 9vw, 120px) 0 !important;
+  background:
+    var(--rhs-modern-hero-glow),
+    linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.9) 42%, rgba(255,255,255,0.58) 74%, rgba(255,255,255,0.25) 100%),
+    var(--visitor-hero-image, none) right center / cover no-repeat !important;
+}
+
+.about-hero { --visitor-hero-image: url("/images/103954.jpg"); }
+.services-hero { --visitor-hero-image: url("/images/freepik__assistant__14091.png"); }
+.contact-hero { --visitor-hero-image: url("/images/2147771767.jpg"); }
+.apply-hero { --visitor-hero-image: url("/images/IMAGE DE slogan.png"); }
+.jobs-hero { --visitor-hero-image: url("/images/freepik__assistant__55362.png"); }
+.catalogue-hero { --visitor-hero-image: url("/images/H2H (5).png"); }
+.job-detail-hero { --visitor-hero-image: var(--hero-url); }
+.formation-hero { --visitor-hero-image: url("/images/16437.jpg"); }
+
+.services-hero::before,
+.contact-hero::before,
+.apply-hero::before,
+.jobs-hero::before,
+.catalogue-hero::before,
+.job-detail-hero::before,
+.formation-hero::before,
+.about-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(800px 420px at 18% 76%, rgba(255,255,255,0.8), transparent 64%);
+}
+
+.services-hero::after,
+.contact-hero::after,
+.apply-hero::after,
+.jobs-hero::after,
+.catalogue-hero::after,
+.job-detail-hero::after,
+.formation-hero::after {
+  display: none !important;
+}
+
+:is(.services-hero-content, .contact-hero-inner, .apply-hero-content, .jobs-hero-content, .job-hero-inner, .formation-hero-inner, .about-hero-inner) {
+  max-width: 680px;
+  position: relative;
+  z-index: 2;
+}
+
+:is(.services-eyebrow, .contact-eyebrow, .apply-eyebrow, .jobs-eyebrow, .job-detail-eyebrow, .formation-eyebrow, .catalogue-eyebrow, .section-eyebrow, .about-chip, .contact-form-eyebrow) {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin: 0 0 18px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--rhs-modern-primary-soft);
+  color: var(--rhs-modern-primary) !important;
+  border: 1px solid oklch(0.62 0.22 25 / 0.16);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+:is(.services-eyebrow, .contact-eyebrow, .apply-eyebrow, .jobs-eyebrow, .job-detail-eyebrow, .formation-eyebrow, .catalogue-eyebrow, .section-eyebrow, .about-chip, .contact-form-eyebrow)::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--rhs-modern-primary);
+  animation: rhsVisitorPulse 1.8s ease-in-out infinite;
+  box-shadow: none;
+}
+
+.about-chip span:first-child {
+  display: none;
+}
+
+:is(.services-title, .contact-title, .apply-title, .jobs-title, .job-detail-title, .formation-title, .catalogue-title, .about-hero-title) {
+  margin: 0;
+  font-size: clamp(44px, 6.5vw, 82px) !important;
+  line-height: 0.95 !important;
+  text-shadow: none !important;
+}
+
+:is(.services-title, .contact-title, .apply-title, .jobs-title, .about-hero-title) span,
+.catalogue-title span,
+.formation-hero h1 span,
+.contact-title span {
+  color: var(--rhs-modern-primary) !important;
+}
+
+:is(.services-subtitle, .contact-subtitle, .apply-subtitle, .jobs-subtitle, .formation-subtitle, .catalogue-subtitle, .about-hero-subtitle) {
+  max-width: 620px;
+  margin-top: 24px;
+  color: var(--rhs-modern-muted) !important;
+  font-size: clamp(17px, 1.5vw, 21px);
+  line-height: 1.7;
+  text-shadow: none !important;
+}
+
+:is(.services-title, .contact-title, .apply-title, .jobs-title, .about-hero-title)::after,
+.catalogue-title::after {
+  content: "";
+  display: block;
+  width: 96px;
+  height: 4px;
+  margin-top: 24px;
+  border-radius: 999px;
+  background: var(--rhs-modern-gradient);
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) :is(.btn-red, .btn-primary, .jobs-hero-cta, .jobs-filter-btn, .job-btn, .formation-btn, .form-submit, .code-download-btn, .contact-map-link, button[type="submit"]) {
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--rhs-modern-gradient) !important;
+  color: #fff !important;
+  box-shadow: var(--rhs-modern-shadow-soft);
+  text-decoration: none !important;
+  transition: transform 0.28s var(--rhs-modern-ease), box-shadow 0.28s var(--rhs-modern-ease), filter 0.28s var(--rhs-modern-ease) !important;
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) :is(.btn-red, .btn-primary, .jobs-hero-cta, .jobs-filter-btn, .job-btn, .formation-btn, .form-submit, .code-download-btn, .contact-map-link, button[type="submit"]):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 26px 48px oklch(0.62 0.22 25 / 0.24);
+  filter: saturate(1.05);
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) :is(.btn-outline-red, .btn-outline, .jobs-hero-cta--secondary, .jobs-filter-reset) {
+  border: 1px solid oklch(0.62 0.22 25 / 0.32) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.72) !important;
+  color: var(--rhs-modern-primary) !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  transition: transform 0.28s var(--rhs-modern-ease), border-color 0.28s var(--rhs-modern-ease), background 0.28s var(--rhs-modern-ease) !important;
+}
+
+:is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) :is(.btn-outline-red, .btn-outline, .jobs-hero-cta--secondary, .jobs-filter-reset):hover {
+  transform: translateY(-2px);
+  border-color: var(--rhs-modern-primary) !important;
+  background: var(--rhs-modern-primary-soft) !important;
+}
+
+.services-subnav-section,
+.catalogue-filters {
+  position: sticky;
+  top: var(--rhs-header-height, 150px);
+  z-index: 20;
+  background: rgba(255, 252, 248, 0.82) !important;
+  border: 1px solid var(--rhs-modern-border) !important;
+  border-inline: 0 !important;
+  backdrop-filter: blur(16px);
+  padding: 14px 0 !important;
+}
+
+.services-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.services-subnav a {
+  border-radius: 999px;
+  padding: 11px 16px;
+  color: var(--rhs-modern-ink);
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.24s var(--rhs-modern-ease);
+}
+
+.services-subnav a:hover {
+  color: var(--rhs-modern-primary);
+  background: var(--rhs-modern-primary-soft);
+  border-color: oklch(0.62 0.22 25 / 0.18);
+}
+
+:is(.service-detail-section, .code-download-section, .contact-section, .apply-form-section, .jobs-list, .catalogue-grid-section, .job-detail-body) {
+  padding: clamp(72px, 9vw, 120px) 0 !important;
+  background:
+    radial-gradient(900px 420px at 6% 14%, oklch(0.95 0.04 25 / 0.36), transparent 62%),
+    var(--rhs-modern-bg) !important;
+}
+
+.service-detail-section {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+}
+
+.service-detail-section--alt,
+.apply-cndp-section {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.7), oklch(0.95 0.04 25 / 0.22)),
+    var(--rhs-modern-bg) !important;
+}
+
+.service-detail-grid,
+.contact-grid,
+.apply-grid,
+.job-detail-grid,
+.formation-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: start;
+}
+
+.service-detail-grid > *,
+.contact-grid > *,
+.apply-grid > *,
+.job-detail-grid > *,
+.formation-grid > *,
+.presentation-grid > *,
+.director-card > *,
+.testimonials-grid > *,
+.jobs-grid > *,
+.catalogue-grid > *,
+.formations-grid > * {
+  min-width: 0;
+}
+
+.service-detail-grid,
+.contact-grid,
+.apply-grid,
+.job-detail-grid,
+.formation-grid,
+.presentation-grid,
+.director-card,
+.testimonials-grid {
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 34px;
+  background:
+    radial-gradient(680px 320px at 92% 0%, oklch(0.62 0.22 25 / 0.09), transparent 62%),
+    rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 70px rgba(16, 24, 40, 0.08);
+}
+
+.service-detail-grid h2,
+.contact-form-title,
+.apply-card h2,
+.apply-info h3,
+.catalogue-cta h2,
+.job-detail-main h2,
+.formation-main h2,
+.section-title {
+  font-size: clamp(32px, 4vw, 56px) !important;
+  line-height: 1.05;
+  margin: 0 0 18px;
+}
+
+.service-detail-grid p,
+.contact-card-hint,
+.contact-form-subtitle,
+.apply-hint,
+.apply-note,
+.job-desc,
+.formation-desc,
+.job-detail-rich,
+.formation-main p,
+.formation-main li,
+.section-text {
+  color: var(--rhs-modern-muted) !important;
+  line-height: 1.75;
+}
+
+:is(.service-points-card, .code-download-card, .contact-card, .contact-map, .contact-form-card, .contact-mini-cta, .apply-card, .apply-info, .apply-cndp-card, .jobs-filters, .job-card, .formation-card, .formations-empty, .jobs-empty, .job-detail-main, .job-detail-card, .formation-main, .formation-box, .director-card, .why-card, .about-value-card, .filiale-card) {
+  background: var(--rhs-modern-surface) !important;
+  border: 1px solid var(--rhs-modern-border) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 18px 50px rgba(16, 24, 40, 0.07) !important;
+  backdrop-filter: blur(14px);
+  transition: transform 0.34s var(--rhs-modern-ease), box-shadow 0.34s var(--rhs-modern-ease), border-color 0.34s var(--rhs-modern-ease) !important;
+}
+
+:is(.service-points-card, .contact-card, .contact-map, .contact-form-card, .apply-card, .apply-info, .job-card, .formation-card, .job-detail-card, .formation-box, .why-card, .about-value-card, .filiale-card):hover {
+  transform: translateY(-4px);
+  border-color: oklch(0.62 0.22 25 / 0.3) !important;
+  box-shadow: var(--rhs-modern-shadow-card) !important;
+}
+
+.service-points-card,
+.contact-form-card,
+.apply-card,
+.job-detail-main,
+.formation-main,
+.formation-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.service-points-card::before,
+.contact-form-card::before,
+.apply-card::before,
+.job-detail-main::before,
+.formation-main::before,
+.formation-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: var(--rhs-modern-gradient);
+  opacity: 1;
+  pointer-events: none;
+}
+
+.service-points-card ul,
+.apply-benefits,
+.formation-card ul,
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: grid;
+  gap: 12px;
+}
+
+.service-points-card li,
+.apply-benefits li,
+.formation-card ul li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-left: 0 !important;
+  margin-bottom: 0 !important;
+  position: static !important;
+  color: var(--rhs-modern-primary) !important;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.service-points-card li::before,
+.apply-benefits li::before,
+.formation-card ul li::before {
+  content: "✓";
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--rhs-modern-primary-soft);
+  color: var(--rhs-modern-primary);
+  font-size: 12px;
+  margin-top: 1px;
+}
+
+.service-points-card li::before,
+.apply-benefits li::before,
+.formation-card ul li::before {
+  content: "\2713" !important;
+  position: static !important;
+  inset: auto !important;
+}
+
+.code-download-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(28px, 4vw, 46px) !important;
+}
+
+.pdf-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+}
+
+.contact-cards,
+.jobs-grid,
+.catalogue-grid,
+.formations-grid,
+.why-grid,
+.about-values-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.contact-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.jobs-grid,
+.catalogue-grid,
+.formations-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.contact-card-icon,
+.why-icon,
+.filiale-number,
+.meta-ico,
+.card-chip,
+.formation-tags span,
+.job-badge,
+.job-pill-dot {
+  background: var(--rhs-modern-primary-soft) !important;
+  color: var(--rhs-modern-primary) !important;
+  border-color: oklch(0.62 0.22 25 / 0.18) !important;
+}
+
+.contact-card-icon img,
+.why-icon img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: invert(27%) sepia(93%) saturate(2340%) hue-rotate(344deg) brightness(95%) contrast(94%);
+}
+
+.contact-card-value,
+.job-title,
+.formation-title,
+.contact-form-title span,
+.apply-info h3,
+.card-chip,
+.info-value {
+  color: var(--rhs-modern-ink) !important;
+}
+
+.contact-map-frame,
+.contact-map-frame iframe {
+  border-radius: 24px !important;
+  overflow: hidden;
+}
+
+:is(.contact-form input:not([type="checkbox"]):not([type="file"]), .contact-form select, .contact-form textarea, .apply-card input:not([type="checkbox"]):not([type="file"]), .apply-card textarea, .apply-card select, .jobs-filters input:not([type="checkbox"]):not([type="file"]), .jobs-filters select, .catalogue-filter-form select, .catalogue-search, .rhs-modal input:not([type="checkbox"]):not([type="file"]), .rhs-modal textarea, .rhs-modal select) {
+  width: 100%;
+  border-radius: 16px !important;
+  border: 1px solid var(--rhs-modern-border) !important;
+  background: rgba(255,255,255,0.72) !important;
+  color: var(--rhs-modern-ink) !important;
+  box-shadow: none !important;
+  transition: border-color 0.24s var(--rhs-modern-ease), box-shadow 0.24s var(--rhs-modern-ease), background 0.24s var(--rhs-modern-ease);
+}
+
+:is(.contact-form input:not([type="checkbox"]):not([type="file"]), .contact-form select, .contact-form textarea, .apply-card input:not([type="checkbox"]):not([type="file"]), .apply-card textarea, .apply-card select, .jobs-filters input:not([type="checkbox"]):not([type="file"]), .jobs-filters select, .rhs-modal input:not([type="checkbox"]):not([type="file"]), .rhs-modal textarea, .rhs-modal select):focus {
+  outline: none;
+  background: #fff !important;
+  border-color: oklch(0.62 0.22 25 / 0.42) !important;
+  box-shadow: 0 0 0 4px oklch(0.62 0.22 25 / 0.12) !important;
+}
+
+.jobs-filters {
+  margin-top: -54px;
+  position: relative;
+  z-index: 4;
+  padding: 22px !important;
+  overflow: visible;
+}
+
+.jobs-filter,
+.catalogue-filter-form > * {
+  position: relative;
+}
+
+.jobs-search-wrap {
+  position: relative;
+}
+
+.jobs-filters input,
+.jobs-filters select,
+.catalogue-filter-form select,
+.catalogue-search {
+  min-height: 54px;
+  padding: 0 18px !important;
+  font-weight: 800;
+}
+
+.jobs-filters select,
+.catalogue-filter-form select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 44px !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--rhs-modern-primary) 50%),
+    linear-gradient(135deg, var(--rhs-modern-primary) 50%, transparent 50%) !important;
+  background-position:
+    calc(100% - 22px) 50%,
+    calc(100% - 16px) 50% !important;
+  background-size: 6px 6px, 6px 6px !important;
+  background-repeat: no-repeat !important;
+}
+
+.jobs-filters select option,
+.catalogue-filter-form select option {
+  background: #fff;
+  color: var(--rhs-modern-ink);
+  font-weight: 700;
+}
+
+.jobs-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: max-content;
+}
+
+.jobs-filter-btn,
+.jobs-filter-reset {
+  min-height: 50px;
+  padding: 0 22px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.jobs-suggest {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: 10px;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--rhs-modern-shadow-card);
+  backdrop-filter: blur(14px);
+}
+
+.jobs-suggest-item {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: background 0.22s var(--rhs-modern-ease), transform 0.22s var(--rhs-modern-ease);
+}
+
+.jobs-suggest-item:hover {
+  background: var(--rhs-modern-primary-soft);
+  transform: translateX(3px);
+}
+
+.jobs-suggest-title {
+  color: var(--rhs-modern-ink);
+  font-weight: 900;
+}
+
+.jobs-suggest-meta {
+  margin-top: 4px;
+  color: var(--rhs-modern-muted);
+  font-size: 13px;
+}
+
+.jobs-filters-row,
+.catalogue-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.jobs-filter {
+  flex: 1 1 180px;
+}
+
+.jobs-filter-search {
+  flex-basis: 300px;
+}
+
+.job-card {
+  padding: 28px !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.job-card-top,
+.job-card-bottom,
+.job-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.job-card-bottom {
+  margin-top: auto;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.job-pill,
+.formation-tag,
+.formation-badge,
+.apply-offer-badge,
+.card-chip,
+.info-list li {
+  border-radius: 999px !important;
+  border: 1px solid var(--rhs-modern-border) !important;
+  background: rgba(255,255,255,0.7) !important;
+}
+
+.formation-card {
+  min-height: 320px;
+  padding: 34px !important;
+}
+
+.formation-tags,
+.formation-infos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.formation-infos span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--rhs-modern-primary-soft);
+  color: var(--rhs-modern-primary);
+  font-weight: 700;
+}
+
+.catalogue-cta,
+.services-cta {
+  background:
+    linear-gradient(120deg, rgba(8, 12, 28, 0.94), rgba(16, 24, 40, 0.86)),
+    radial-gradient(650px 320px at 20% 20%, oklch(0.62 0.22 25 / 0.3), transparent 65%) !important;
+  color: #fff !important;
+  padding: clamp(72px, 9vw, 120px) 0 !important;
+}
+
+.catalogue-cta :is(h2, p),
+.services-cta :is(h2, p) {
+  color: #fff !important;
+}
+
+.apply-cndp-card {
+  text-align: center;
+  padding: clamp(24px, 4vw, 42px) !important;
+}
+
+.apply-cndp-logo {
+  max-width: 170px;
+  margin: 0 auto 18px;
+}
+
+.director-card,
+.presentation-grid,
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+}
+
+.director-img,
+.testimonials-img {
+  border-radius: 36px;
+  box-shadow: var(--rhs-modern-shadow-card);
+}
+
+.director-badge,
+.rating-badge {
+  background: var(--rhs-modern-surface) !important;
+  border: 1px solid var(--rhs-modern-border) !important;
+  border-radius: 24px !important;
+  box-shadow: var(--rhs-modern-shadow-card) !important;
+}
+
+.about-section-head {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 48px;
+}
+
+.about-line {
+  width: 82px;
+  height: 4px;
+  margin: 18px auto 0;
+  border-radius: 999px;
+  background: var(--rhs-modern-gradient);
+}
+
+.why-grid,
+.about-values-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.about-value-card,
+.why-card,
+.filiale-card {
+  padding: 28px !important;
+}
+
+.about-filiales-section {
+  padding: clamp(72px, 9vw, 120px) 0;
+  background:
+    radial-gradient(900px 420px at 85% 16%, oklch(0.62 0.22 25 / 0.12), transparent 62%),
+    var(--rhs-modern-bg);
+}
+
+.subsidiaries-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.subsidiary-card {
+  position: relative;
+  min-height: 300px;
+  padding: 30px;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 20px 55px rgba(16, 24, 40, 0.08);
+  overflow: hidden;
+  transition: transform 0.34s var(--rhs-modern-ease), box-shadow 0.34s var(--rhs-modern-ease), border-color 0.34s var(--rhs-modern-ease);
+}
+
+.subsidiary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: var(--rhs-modern-gradient);
+}
+
+.subsidiary-card:hover {
+  transform: translateY(-5px);
+  border-color: oklch(0.62 0.22 25 / 0.3);
+  box-shadow: var(--rhs-modern-shadow-card);
+}
+
+.subsidiary-card-featured {
+  background:
+    linear-gradient(145deg, oklch(0.95 0.04 25 / 0.78), rgba(255, 255, 255, 0.92));
+}
+
+.subsidiary-mark {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 24px;
+  border-radius: 18px;
+  background: var(--rhs-modern-primary-soft);
+  color: var(--rhs-modern-primary);
+  font-weight: 900;
+}
+
+.subsidiary-kicker {
+  color: var(--rhs-modern-primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.subsidiary-card h3 {
+  margin: 10px 0 14px;
+  font-size: 34px;
+}
+
+.subsidiary-card p {
+  color: var(--rhs-modern-muted);
+  line-height: 1.75;
+}
+
+.subsidiary-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  color: var(--rhs-modern-primary);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.rhs-modal-open {
+  overflow: hidden;
+}
+
+.rhs-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.28s var(--rhs-modern-ease), visibility 0.28s var(--rhs-modern-ease);
+}
+
+.rhs-modal[aria-hidden="true"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.rhs-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 18, 34, 0.58);
+  backdrop-filter: blur(14px);
+}
+
+.rhs-modal-panel {
+  position: relative;
+  width: min(940px, 100%);
+  max-height: min(88vh, 820px);
+  overflow: auto;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 34px;
+  background:
+    radial-gradient(600px 280px at 90% 5%, oklch(0.62 0.22 25 / 0.14), transparent 60%),
+    rgba(255, 255, 255, 0.96);
+  box-shadow: 0 36px 90px rgba(10, 15, 30, 0.28);
+  padding: clamp(26px, 4vw, 44px);
+  transform: translateY(0) scale(1);
+  transition: transform 0.34s var(--rhs-modern-ease), opacity 0.34s var(--rhs-modern-ease);
+}
+
+.rhs-offer-modal {
+  width: min(980px, 100%);
+}
+
+.rhs-apply-modal {
+  width: min(960px, 100%);
+}
+
+.rhs-modal[aria-hidden="true"] .rhs-modal-panel {
+  opacity: 0;
+  transform: translateY(22px) scale(0.96);
+}
+
+.rhs-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rhs-modern-primary-soft);
+  color: var(--rhs-modern-primary);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rhs-modal-head h2 {
+  margin: 0 0 12px;
+  font-size: clamp(34px, 5vw, 58px);
+}
+
+.rhs-modal-head p:not(.section-eyebrow) {
+  color: var(--rhs-modern-muted);
+  line-height: 1.7;
+}
+
+.job-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.job-modal-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 13px;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--rhs-modern-ink);
+  font-weight: 800;
+}
+
+.job-modal-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 26px 0;
+}
+
+.job-modal-body article:first-child {
+  grid-column: 1 / -1;
+}
+
+.job-modal-body article {
+  padding: 22px;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.job-modal-body h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.job-modal-body div {
+  color: var(--rhs-modern-muted);
+  line-height: 1.75;
+}
+
+.rhs-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.rhs-modal-actions .btn-primary,
+.rhs-modal-actions .btn-outline-red {
+  min-width: 160px;
+  min-height: 48px;
+  padding-inline: 24px !important;
+}
+
+.rhs-modal-actions [hidden],
+.rhs-apply-steps [hidden],
+.apply-step[hidden],
+[data-apply-submit][hidden],
+[data-apply-next][hidden],
+[data-apply-prev][hidden] {
+  display: none !important;
+}
+
+.rhs-apply-steps {
+  margin-top: 24px;
+}
+
+.apply-stepper {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.apply-step-dot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 999px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--rhs-modern-muted);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.apply-step-dot span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--rhs-modern-primary-soft);
+  color: var(--rhs-modern-primary);
+}
+
+.apply-step-dot.is-active,
+.apply-step-dot.is-complete {
+  color: var(--rhs-modern-ink);
+  border-color: oklch(0.62 0.22 25 / 0.3);
+}
+
+.apply-step-dot.is-active span,
+.apply-step-dot.is-complete span {
+  background: var(--rhs-modern-gradient);
+  color: #fff;
+}
+
+.apply-step {
+  display: none;
+}
+
+.apply-step.is-active {
+  display: block;
+  animation: rhsStepIn 0.36s var(--rhs-modern-ease);
+}
+
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.modal-form-grid label,
+.modal-form-full {
+  display: grid;
+  gap: 8px;
+  color: var(--rhs-modern-ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.modal-form-full {
+  grid-column: 1 / -1;
+}
+
+.file-field {
+  position: relative;
+  min-height: 70px;
+  padding: 16px;
+  border: 1px dashed oklch(0.62 0.22 25 / 0.28);
+  border-radius: 18px;
+  background: var(--rhs-modern-primary-soft);
+  cursor: pointer;
+}
+
+.file-field:has(input:required)::after {
+  content: "Obligatoire";
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #fff;
+  color: var(--rhs-modern-primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.file-field input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-field span {
+  color: var(--rhs-modern-muted);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.file-field span[data-cms-key] {
+  color: var(--rhs-modern-ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.modal-consent,
+.form-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--rhs-modern-muted);
+  line-height: 1.6;
+}
+
+.modal-consent input[type="checkbox"],
+.form-consent input[type="checkbox"],
+.contact-form input[type="checkbox"] {
+  flex: 0 0 18px;
+  width: 18px !important;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--rhs-modern-primary);
+}
+
+.modal-cndp-note {
+  margin-top: 14px;
+  color: var(--rhs-modern-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.modal-cndp-card {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid oklch(0.62 0.22 25 / 0.16);
+  border-radius: 22px;
+  background:
+    radial-gradient(260px 150px at 0% 0%, oklch(0.95 0.04 25 / 0.7), transparent 70%),
+    rgba(255, 255, 255, 0.72);
+}
+
+.modal-cndp-logo {
+  width: 112px;
+  max-width: 100%;
+  margin: 0;
+}
+
+.modal-cndp-card .modal-cndp-note {
+  margin: 0;
+}
+
+.apply-review-card {
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.apply-review-card h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.apply-review-card p {
+  margin: 0;
+  color: var(--rhs-modern-muted);
+  line-height: 1.6;
+}
+
+.apply-review-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.apply-review-list div {
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--rhs-modern-primary-soft);
+  min-width: 0;
+}
+
+.apply-review-list span {
+  display: block;
+  color: var(--rhs-modern-primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.apply-review-list strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--rhs-modern-ink);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.apply-toast {
+  position: fixed;
+  right: clamp(16px, 3vw, 34px);
+  bottom: clamp(16px, 3vw, 34px);
+  z-index: 1000;
+  width: min(420px, calc(100vw - 32px));
+  padding: 18px 20px;
+  border: 1px solid oklch(0.72 0.17 145 / 0.28);
+  border-radius: 22px;
+  background:
+    radial-gradient(260px 140px at 100% 0%, oklch(0.72 0.17 145 / 0.16), transparent 66%),
+    rgba(247, 255, 250, 0.96);
+  color: oklch(0.28 0.12 145);
+  box-shadow: 0 24px 70px rgba(16, 80, 45, 0.18);
+  backdrop-filter: blur(14px);
+  animation: rhsToastIn 0.42s var(--rhs-modern-ease);
+}
+
+.apply-toast strong,
+.apply-toast span {
+  display: block;
+}
+
+.apply-toast strong {
+  color: oklch(0.24 0.13 145);
+}
+
+.apply-toast span {
+  margin-top: 5px;
+  color: oklch(0.38 0.06 145);
+  line-height: 1.55;
+}
+
+.apply-toast.is-error {
+  border-color: oklch(0.62 0.22 25 / 0.22);
+  background:
+    radial-gradient(260px 140px at 100% 0%, oklch(0.62 0.22 25 / 0.14), transparent 66%),
+    rgba(255, 248, 246, 0.96);
+  color: var(--rhs-modern-primary);
+  box-shadow: 0 24px 70px oklch(0.62 0.22 25 / 0.16);
+}
+
+.apply-toast.is-error strong {
+  color: var(--rhs-modern-primary);
+}
+
+.apply-toast.is-error span {
+  color: var(--rhs-modern-muted);
+}
+
+@keyframes rhsStepIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rhsToastIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+[data-rhs-animate],
+[data-reveal],
+[data-animate] {
+  opacity: 0;
+  transform: translateY(34px);
+  transition:
+    opacity 0.72s var(--rhs-modern-ease) var(--rhs-delay, 0ms),
+    transform 0.72s var(--rhs-modern-ease) var(--rhs-delay, 0ms);
+}
+
+[data-rhs-animate].is-visible,
+[data-reveal].is-visible,
+[data-animate].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes rhsVisitorPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.55); opacity: 0.45; }
+}
+
+/* Targeted section styling from the provided reference */
+.service-points-card li::before,
+.apply-benefits li::before,
+.formation-card ul li::before {
+  content: "\2713";
+}
+
+.about-page :is(.why-section, .about-values-section),
+.services-page .service-detail-section,
+.contact-page .contact-section {
+  background:
+    radial-gradient(760px 360px at 88% 0%, oklch(0.62 0.22 25 / 0.10), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,0.88), var(--rhs-modern-bg)) !important;
+}
+
+.about-page .why-section .section-text {
+  max-width: 760px;
+  margin: 0 auto 58px !important;
+  text-align: center;
+  font-size: 18px;
+}
+
+.about-page .why-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.about-page .why-card {
+  position: relative;
+  min-height: 188px;
+  padding: 96px 28px 28px !important;
+  overflow: hidden;
+  background: rgba(255,255,255,0.9) !important;
+  border-color: oklch(0.62 0.22 25 / 0.15) !important;
+}
+
+.about-page .why-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 64px;
+  background: oklch(0.95 0.04 25 / 0.72);
+}
+
+.about-page .why-icon {
+  position: absolute;
+  top: 18px;
+  left: 28px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  background: #fff !important;
+  box-shadow: 0 12px 28px oklch(0.62 0.22 25 / 0.12);
+}
+
+.about-page .why-title,
+.about-page .about-value-card h3 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 0 0 12px;
+}
+
+.about-page .why-desc,
+.about-page .about-value-card p {
+  color: var(--rhs-modern-muted) !important;
+  line-height: 1.65;
+}
+
+.about-page .about-values-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.about-page .about-value-card {
+  position: relative;
+  min-height: 260px;
+  padding: 30px 24px 26px !important;
+  background: rgba(255,255,255,0.92) !important;
+  border-color: oklch(0.62 0.22 25 / 0.13) !important;
+}
+
+.about-page .about-value-card > span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 48px;
+  height: 38px;
+  margin-bottom: 26px;
+  padding-inline: 14px;
+  border-radius: 14px;
+  background: var(--rhs-modern-gradient);
+  color: #fff;
+  font-weight: 900;
+  box-shadow: var(--rhs-modern-shadow-soft);
+}
+
+.about-page .about-value-card::after {
+  content: "";
+  position: absolute;
+  top: 34px;
+  right: 26px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid oklch(0.62 0.22 25 / 0.42);
+  border-radius: 999px;
+  opacity: .72;
+}
+
+.services-page .services-subnav-section {
+  padding: 18px 0 !important;
+  background:
+    radial-gradient(580px 220px at 70% 0%, oklch(0.62 0.22 25 / 0.10), transparent 70%),
+    rgba(255,252,248,.86) !important;
+}
+
+.services-page .services-subnav {
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+  margin-inline: auto;
+  padding: 10px;
+  border: 1px solid var(--rhs-modern-border);
+  border-radius: 24px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 20px 52px rgba(16,24,40,.08);
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scroll-padding-inline: 12px;
+}
+
+.services-page .services-subnav a:hover,
+.services-page .services-subnav a:focus-visible,
+.services-page .services-subnav a.is-active {
+  color: #fff;
+  background: var(--rhs-modern-gradient);
+  box-shadow: var(--rhs-modern-shadow-soft);
+}
+
+.services-detail-slider {
+  overflow: hidden;
+}
+
+.services-detail-track {
+  display: flex;
+  transition: transform 0.65s var(--rhs-modern-ease);
+  will-change: transform;
+}
+
+.services-detail-track > :is(.service-detail-section, .code-download-section) {
+  flex: 0 0 100%;
+  min-width: 100%;
+}
+
+.services-detail-track > .service-detail-section {
+  min-height: 95vh;
+}
+
+.services-page .service-detail-grid {
+  position: relative;
+  align-items: center;
+  padding: clamp(34px, 5vw, 58px) !important;
+  border-radius: 34px !important;
+  border-color: oklch(0.62 0.22 25 / 0.16) !important;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.94), rgba(255,255,255,.76)),
+    radial-gradient(620px 300px at 98% 10%, oklch(0.62 0.22 25 / 0.10), transparent 64%) !important;
+}
+
+.services-page .service-detail-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0 36px auto;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--rhs-modern-gradient);
+}
+
+.services-page .service-points-card {
+  padding: clamp(28px, 4vw, 42px) !important;
+  border-color: oklch(0.62 0.22 25 / 0.22) !important;
+  background:
+    radial-gradient(360px 220px at 100% 0%, oklch(0.62 0.22 25 / 0.08), transparent 65%),
+    rgba(255,255,255,.8) !important;
+}
+
+.services-page .service-points-card ul {
+  gap: 16px;
+}
+
+.services-page .service-points-card li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 0 12px;
+  padding-left: 0 !important;
+  margin-bottom: 0 !important;
+  position: static !important;
+}
+
+.services-page .service-points-card li::before {
+  position: static !important;
+  inset: auto !important;
+  width: 22px;
+  height: 22px;
+  margin-top: 0.18em;
+  line-height: 1;
+}
+
+.about-page .test-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.about-page .test-controls .test-dots {
+  margin-top: 0;
+}
+
+.about-page .test-arrow {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rhs-modern-gradient);
+  color: #fff;
+  box-shadow: var(--rhs-modern-shadow-soft);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.25s var(--rhs-modern-ease),
+    box-shadow 0.25s var(--rhs-modern-ease);
+}
+
+.about-page .test-arrow:hover,
+.about-page .test-arrow:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--rhs-modern-shadow-card);
+}
+
+.contact-page .contact-grid {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.contact-page .contact-card,
+.contact-page .contact-map,
+.contact-page .contact-form-card {
+  background: rgba(255,255,255,.9) !important;
+  border-color: oklch(0.62 0.22 25 / 0.14) !important;
+}
+
+.contact-page .contact-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  min-height: 122px;
+  padding: 22px !important;
+}
+
+.contact-page .contact-card-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 18px;
+}
+
+.contact-page .contact-card-label,
+.contact-page .contact-form-eyebrow {
+  color: var(--rhs-modern-primary) !important;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.contact-page .contact-form-card {
+  padding: clamp(30px, 4.5vw, 48px) !important;
+  border-radius: 34px !important;
+}
+
+.contact-page .contact-map {
+  overflow: hidden;
+}
+
+.contact-page .contact-mini-cta {
+  background:
+    radial-gradient(380px 180px at 100% 0%, oklch(0.62 0.22 25 / .22), transparent 60%),
+    var(--rhs-modern-ink) !important;
+  color: #fff !important;
+}
+
+.contact-page .contact-mini-cta :is(h3, p) {
+  color: #fff !important;
+}
+
+@media (max-width: 1180px) {
+  :is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) .container {
+    width: min(100% - 32px, 1080px);
+  }
+
+  .jobs-grid,
+  .catalogue-grid,
+  .formations-grid,
+  .why-grid,
+  .about-values-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jobs-filters-row,
+  .catalogue-filter-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .services-subnav-section,
+  .catalogue-filters {
+    top: var(--rhs-header-height, 124px);
+  }
+
+  .services-subnav,
+  .catalogue-filter-form,
+  .jobs-filters-row {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+  }
+
+  .services-page .services-subnav {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .services-subnav a {
+    white-space: nowrap;
+  }
+
+  .rhs-modal-panel {
+    width: min(94vw, 860px);
+    max-height: min(86vh, 760px);
+    overflow: auto;
+  }
+
+  .apply-review-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  :is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) .container {
+    width: min(100% - 24px, 760px);
+  }
+
+  .services-hero,
+  .contact-hero,
+  .apply-hero,
+  .jobs-hero,
+  .catalogue-hero,
+  .job-detail-hero,
+  .formation-hero,
+  .about-hero {
+    min-height: 68vh !important;
+    padding: 72px 0 !important;
+    background-position: center !important;
+  }
+
+  .service-detail-grid,
+  .contact-grid,
+  .apply-grid,
+  .job-detail-grid,
+  .formation-grid,
+  .director-card,
+  .presentation-grid,
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .services-detail-track > .service-detail-section {
+    min-height: auto;
+  }
+
+  .contact-cards,
+  .jobs-grid,
+  .catalogue-grid,
+  .formations-grid,
+  .why-grid,
+  .about-values-grid,
+  .subsidiaries-grid,
+  .jobs-filters-row,
+  .catalogue-filter-form {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-form-grid,
+  .job-modal-body {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-cndp-card {
+    grid-template-columns: 1fr;
+  }
+
+  .apply-stepper {
+    grid-template-columns: 1fr;
+  }
+
+  .code-download-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .job-card-bottom,
+  .rhs-modal-actions,
+  .contact-page .contact-card {
+    align-items: stretch;
+  }
+
+  .rhs-modal-actions {
+    justify-content: stretch;
+  }
+
+  .rhs-modal-actions :is(.btn-primary, .btn-outline-red) {
+    width: 100%;
+  }
+
+  .services-page .service-detail-grid {
+    padding: 28px !important;
+  }
+
+  .jobs-filters,
+  .catalogue-filters {
+    padding-inline: 12px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  :is(.about-page, .services-page, .contact-page, .apply-page, .jobs-page, .job-detail-page, .formation-page) .container {
+    width: min(100% - 20px, 560px);
+  }
+
+  .services-hero,
+  .contact-hero,
+  .apply-hero,
+  .jobs-hero,
+  .catalogue-hero,
+  .job-detail-hero,
+  .formation-hero,
+  .about-hero {
+    min-height: 58vh !important;
+    padding: 56px 0 !important;
+  }
+
+  :is(.services-title, .contact-title, .apply-title, .jobs-title, .job-detail-title, .formation-title, .catalogue-title, .about-hero-title) {
+    font-size: clamp(34px, 12vw, 48px) !important;
+    line-height: 1.04 !important;
+  }
+
+  :is(.services-subtitle, .contact-subtitle, .apply-subtitle, .jobs-subtitle, .formation-subtitle, .catalogue-subtitle, .about-hero-subtitle) {
+    font-size: 16px;
+    line-height: 1.62;
+  }
+
+  :is(.service-detail-section, .code-download-section, .contact-section, .apply-form-section, .jobs-list, .catalogue-grid-section, .job-detail-body) {
+    padding: 54px 0 !important;
+  }
+
+  .service-detail-grid,
+  .contact-grid,
+  .apply-grid,
+  .job-detail-grid,
+  .formation-grid,
+  .presentation-grid,
+  .director-card,
+  .testimonials-grid {
+    padding: 22px !important;
+    border-radius: 24px !important;
+  }
+
+  .apply-step-dot {
+    justify-content: flex-start;
+  }
+
+  .rhs-modal {
+    padding: 12px;
+  }
+
+  .rhs-modal-panel {
+    width: 100%;
+    max-height: 88vh;
+    padding: 24px !important;
+    border-radius: 26px !important;
+  }
+
+  .rhs-modal-head h2 {
+    font-size: clamp(30px, 10vw, 44px);
+  }
+
+  .file-field {
+    min-height: 64px;
+  }
+
+  .apply-toast {
+    right: 10px;
+    bottom: 10px;
+    width: calc(100vw - 20px);
+  }
+}
+
+@media (max-width: 420px) {
+  .services-subnav-section,
+  .catalogue-filters {
+    top: var(--rhs-header-height, 104px);
+  }
+
+  .services-subnav {
+    padding: 8px;
+    border-radius: 18px;
+  }
+
+  .services-subnav a {
+    padding: 10px 13px;
+    font-size: 14px;
+  }
+
+  .modal-form-grid {
+    gap: 12px;
+  }
+
+  .modal-form-grid label,
+  .modal-form-full {
+    letter-spacing: 0.08em;
+  }
+
+  .apply-review-list strong {
+    word-break: break-word;
+  }
+}

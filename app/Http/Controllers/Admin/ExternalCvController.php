@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Jobs\IndexExternalCvBatchJob;
 use App\Http\Controllers\Controller;
 use App\Models\Cv;
 use App\Models\CvFolder;
 use App\Models\ExternalCv;
 use App\Models\ExternalCvBatch;
-use App\Services\ExternalCvIndexingService;
+use App\Services\CvStorageOptimizationService;
+use App\Services\ProcessingEtaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -34,7 +36,8 @@ class ExternalCvController extends Controller
                 $query->where('status', $status);
             })
             ->latest()
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
         return view('admin.external-cvs.index', compact('batches', 'q', 'status'));
     }
@@ -56,8 +59,7 @@ class ExternalCvController extends Controller
             'notes' => ['nullable', 'string'],
             'cv_folder_id' => ['nullable', 'exists:cv_folders,id'],
             'cv_files' => ['required', 'array', 'min:1'],
-            'cv_files.*' => ['required', 'file', 'mimes:pdf,doc,docx,txt', 'max:51200'],
-
+            'cv_files.*' => ['required', 'file', 'extensions:pdf,doc,docx,txt', 'max:51200'],
             'batch_id' => ['nullable', 'integer', 'exists:external_cv_batches,id'],
             'chunk_index' => ['nullable', 'integer', 'min:0'],
             'total_chunks' => ['nullable', 'integer', 'min:1'],
@@ -65,11 +67,12 @@ class ExternalCvController extends Controller
         ]);
 
         $isAjax = $request->expectsJson() || $request->ajax();
-
-        $batch = null;
+        $chunkIndex = (int) ($validated['chunk_index'] ?? 0);
+        $totalChunks = max(1, (int) ($validated['total_chunks'] ?? 1));
+        $isLastChunk = ($chunkIndex + 1) >= $totalChunks;
 
         if (!empty($validated['batch_id'])) {
-            $batch = ExternalCvBatch::query()->findOrFail($validated['batch_id']);
+            $batch = ExternalCvBatch::query()->findOrFail((int) $validated['batch_id']);
             $folderId = $batch->cv_folder_id;
         } else {
             $name = trim((string) ($validated['name'] ?? ''));
@@ -88,7 +91,7 @@ class ExternalCvController extends Controller
                     ['slug' => $slug],
                     [
                         'name' => $folderName,
-                        'description' => 'Dossier créé automatiquement depuis un lot externe.',
+                        'description' => 'Dossier cree automatiquement depuis un lot externe.',
                         'created_by' => auth()->id(),
                     ]
                 );
@@ -103,7 +106,9 @@ class ExternalCvController extends Controller
                 'total_files' => (int) ($validated['total_files'] ?? count($request->file('cv_files', []))),
                 'indexed_files' => 0,
                 'failed_files' => 0,
-                'status' => 'draft',
+                'duplicate_files' => 0,
+                'status' => ExternalCvBatch::STATUS_PENDING,
+                'processing_status' => ExternalCvBatch::PROCESSING_STATUS_PENDING,
                 'created_by' => auth()->id(),
             ]);
         }
@@ -115,10 +120,8 @@ class ExternalCvController extends Controller
             try {
                 $storedPath = $file->store('private/external-cvs/' . $batch->id, 'local');
 
-                $hash = null;
-
                 try {
-                    $hash = hash_file('sha256', $file->getRealPath());
+                    $hash = hash_file('sha256', $file->getRealPath()) ?: null;
                 } catch (\Throwable $e) {
                     $hash = null;
                 }
@@ -159,6 +162,18 @@ class ExternalCvController extends Controller
             'failed_files' => (int) $batch->failed_files + $failedCount,
         ]);
 
+        if ($isLastChunk) {
+            $batch->update([
+                'status' => ExternalCvBatch::STATUS_PROCESSING,
+                'processing_status' => ExternalCvBatch::PROCESSING_STATUS_PENDING,
+                'processing_started_at' => null,
+                'processing_completed_at' => null,
+                'processing_error_message' => null,
+            ]);
+
+            IndexExternalCvBatchJob::dispatch($batch->id)->afterCommit();
+        }
+
         if ($isAjax) {
             return response()->json([
                 'success' => true,
@@ -167,13 +182,18 @@ class ExternalCvController extends Controller
                 'failed' => $failedCount,
                 'current_total' => $realTotal,
                 'redirect_url' => route('admin.external-cvs.show', $batch),
-                'message' => $storedCount . ' CV ajouté(s) au lot.',
+                'status_url' => route('admin.external-cvs.status', $batch),
+                'message' => $isLastChunk
+                    ? 'Upload termine. L indexation du lot a ete planifiee en arriere-plan.'
+                    : $storedCount . ' CV ajoute(s) au lot.',
             ]);
         }
 
         return redirect()
             ->route('admin.external-cvs.show', $batch)
-            ->with('success', 'Lot importé avec succès. Dossier CV Bank affecté automatiquement.');
+            ->with('success', $isLastChunk
+                ? 'Lot importe avec succes. L indexation du lot a ete planifiee en arriere-plan.'
+                : 'Lot importe avec succes. Dossier CV Bank affecte automatiquement.');
     }
 
     public function show(ExternalCvBatch $externalCvBatch, Request $request)
@@ -200,7 +220,8 @@ class ExternalCvController extends Controller
                 $query->where('status', $status);
             })
             ->latest()
-            ->get();
+            ->paginate(50)
+            ->withQueryString();
 
         return view('admin.external-cvs.show', [
             'batch' => $externalCvBatch,
@@ -210,89 +231,168 @@ class ExternalCvController extends Controller
         ]);
     }
 
-    public function indexBatch(
-        Request $request,
-        ExternalCvBatch $externalCvBatch,
-        ExternalCvIndexingService $indexingService
-    ) {
+    public function indexBatch(Request $request, ExternalCvBatch $externalCvBatch)
+    {
         try {
             $forceReindex = (bool) $request->boolean('force_reindex');
 
-            if ($forceReindex) {
-                $indexingService->reindexBatch($externalCvBatch);
-                $message = 'Réindexation locale du lot terminée avec succès.';
-            } else {
-                $indexingService->indexBatch($externalCvBatch);
-                $message = 'Indexation locale du lot terminée avec succès.';
-            }
+            $externalCvBatch->update([
+                'status' => ExternalCvBatch::STATUS_PROCESSING,
+                'processing_status' => ExternalCvBatch::PROCESSING_STATUS_PENDING,
+                'processing_started_at' => null,
+                'processing_completed_at' => null,
+                'processing_error_message' => null,
+            ]);
 
-            $externalCvBatch->refresh();
+            IndexExternalCvBatchJob::dispatch($externalCvBatch->id, $forceReindex)->afterCommit();
 
             return redirect()
                 ->route('admin.external-cvs.show', $externalCvBatch)
-                ->with('success', $message);
+                ->with('success', $forceReindex
+                    ? 'La reindexation du lot a ete planifiee en arriere-plan.'
+                    : 'L indexation du lot a ete planifiee en arriere-plan.');
         } catch (\Throwable $e) {
             $externalCvBatch->update([
-                'status' => 'failed',
+                'status' => ExternalCvBatch::STATUS_FAILED,
+                'processing_status' => ExternalCvBatch::PROCESSING_STATUS_FAILED,
+                'processing_completed_at' => now(),
+                'processing_error_message' => mb_substr($e->getMessage(), 0, 2000),
             ]);
 
             return redirect()
                 ->route('admin.external-cvs.show', $externalCvBatch)
-                ->with('error', 'Erreur lors de l’indexation du lot : ' . $e->getMessage());
+                ->with('error', 'Erreur lors de l indexation du lot : ' . $e->getMessage());
         }
+    }
+
+    public function status(ExternalCvBatch $externalCvBatch, ProcessingEtaService $eta)
+    {
+        $totals = ExternalCv::query()
+            ->where('batch_id', $externalCvBatch->id)
+            ->selectRaw("
+                COUNT(*) as total_files,
+                SUM(CASE WHEN status = 'indexed' THEN 1 ELSE 0 END) as indexed_files,
+                SUM(CASE WHEN status = 'duplicate' THEN 1 ELSE 0 END) as duplicate_files,
+                SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_files,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_files
+            ")
+            ->first();
+
+        $totalFiles = max((int) ($externalCvBatch->total_files ?? 0), (int) ($totals->total_files ?? 0));
+        $indexedFiles = (int) ($totals->indexed_files ?? 0);
+        $duplicateFiles = (int) ($totals->duplicate_files ?? 0);
+        $failedFiles = (int) ($totals->failed_files ?? 0);
+        $pendingFiles = max(0, $totalFiles - ($indexedFiles + $duplicateFiles + $failedFiles));
+        $progressPercentage = $totalFiles > 0
+            ? (int) round((($indexedFiles + $duplicateFiles + $failedFiles) / $totalFiles) * 100)
+            : 0;
+        $processedItems = $indexedFiles + $duplicateFiles + $failedFiles;
+        $recent = $this->recentIndexingThroughput($externalCvBatch);
+        $queuedJobs = $this->queuedIndexingJobsCount($externalCvBatch);
+        $etaPayload = $eta->payload(
+            processed: $processedItems,
+            total: $totalFiles,
+            startedAt: $externalCvBatch->processing_started_at ?: $externalCvBatch->created_at,
+            status: $externalCvBatch->processing_status ?: ExternalCvBatch::PROCESSING_STATUS_PENDING,
+            recentProcessed: $recent['processed'],
+            recentWindowSeconds: $recent['window_seconds'],
+            preferRecent: true
+        );
+
+        return response()->json([
+            'status' => $externalCvBatch->processing_status ?: ExternalCvBatch::PROCESSING_STATUS_PENDING,
+            'total_files' => $totalFiles,
+            'indexed_files' => $indexedFiles,
+            'duplicate_files' => $duplicateFiles,
+            'failed_files' => $failedFiles,
+            'pending_files' => $pendingFiles,
+            'queued_jobs' => $queuedJobs,
+            'progress_percentage' => $progressPercentage,
+            'error_message' => $externalCvBatch->processing_error_message,
+            'status_message' => match (true) {
+                $pendingFiles <= 0 && $failedFiles > 0 => 'Le traitement du lot est termine avec des echecs. Filtrez sur Echec pour voir les fichiers a corriger ou relancer.',
+                $pendingFiles <= 0 => 'Le traitement du lot est termine.',
+                $queuedJobs > 0 => 'Indexation planifiee dans la file. Lancez le worker indexing si le compteur ne bouge pas.',
+                $recent['processed'] > 0 => 'Indexation synchronisee avec le worker.',
+                default => 'Aucun job actif detecte pour ce lot. Cliquez sur Reprendre l indexation si le compteur reste bloque.',
+            },
+        ] + $etaPayload);
+    }
+
+    private function recentIndexingThroughput(ExternalCvBatch $externalCvBatch): array
+    {
+        $minutes = 10;
+        $since = now()->subMinutes($minutes);
+        $query = ExternalCv::query()
+            ->where('batch_id', $externalCvBatch->id)
+            ->whereIn('status', [
+                ExternalCv::STATUS_INDEXED,
+                ExternalCv::STATUS_DUPLICATE,
+                ExternalCv::STATUS_FAILED,
+            ])
+            ->where('updated_at', '>=', $since);
+
+        $processed = (int) (clone $query)->count();
+        $firstRecent = (clone $query)->min('updated_at');
+        $windowSeconds = $firstRecent
+            ? max(60, \Illuminate\Support\Carbon::parse($firstRecent)->diffInSeconds(now(), true))
+            : $minutes * 60;
+
+        return [
+            'processed' => $processed,
+            'window_seconds' => $windowSeconds,
+        ];
+    }
+
+    private function queuedIndexingJobsCount(ExternalCvBatch $externalCvBatch): int
+    {
+        if (!Schema::hasTable('jobs')) {
+            return 0;
+        }
+
+        return DB::table('jobs')
+            ->whereIn('queue', ['indexing', 'external-indexing'])
+            ->where('payload', 'like', '%IndexExternalCvBatchJob%')
+            ->where('payload', 'like', '%' . $externalCvBatch->id . '%')
+            ->count();
     }
 
     public function destroy(Request $request, ExternalCvBatch $externalCvBatch)
     {
         $validated = $request->validate([
-            'delete_mode' => ['required', 'in:batch_only,batch_and_indexed_cvs'],
+            'delete_mode' => ['required', 'in:batch_only,batch_and_cvs'],
         ]);
 
         DB::transaction(function () use ($validated, $externalCvBatch) {
+            $storageOptimization = app(CvStorageOptimizationService::class);
             $files = ExternalCv::query()
                 ->where('batch_id', $externalCvBatch->id)
                 ->get();
 
-            if ($validated['delete_mode'] === 'batch_and_indexed_cvs') {
-                $cvIds = $files->pluck('cv_id')->filter()->unique()->values();
+            foreach ($files as $file) {
+                $linkedCv = $file->cv_id ? Cv::find($file->cv_id) : null;
 
-                if ($cvIds->isNotEmpty()) {
-                    $cvs = Cv::query()->whereIn('id', $cvIds)->get();
-
-                    foreach ($cvs as $cv) {
-                        if (!empty($cv->encrypted_path) && Storage::disk('local')->exists($cv->encrypted_path)) {
-                            Storage::disk('local')->delete($cv->encrypted_path);
-                        }
-
-                        $cv->delete();
-                    }
+                if (!$linkedCv) {
+                    continue;
                 }
-            } else {
-                $cvIds = $files->pluck('cv_id')->filter()->unique()->values();
 
-                if ($cvIds->isNotEmpty()) {
-                    $cvs = Cv::query()->whereIn('id', $cvIds)->get();
-
-                    foreach ($cvs as $cv) {
-                        $payload = [];
-
-                        if (Schema::hasColumn('cvs', 'source_type')) {
-                            $payload['source_type'] = null;
-                        }
-
-                        if (Schema::hasColumn('cvs', 'source_id')) {
-                            $payload['source_id'] = null;
-                        }
-
-                        if (!empty($payload)) {
-                            $cv->update($payload);
-                        }
-                    }
+                if (
+                    $validated['delete_mode'] === 'batch_and_cvs'
+                    && $this->canSafelyDeleteLinkedCv($linkedCv, $file)
+                ) {
+                    $storageOptimization->deleteStoredFiles($linkedCv);
+                    $linkedCv->delete();
+                    continue;
                 }
+
+                $this->detachLinkedCvFromExternalSource($linkedCv, $file, $storageOptimization);
             }
 
             foreach ($files as $file) {
-                if (!empty($file->stored_path) && Storage::disk('local')->exists($file->stored_path)) {
+                $isStillReferenced = !empty($file->stored_path)
+                    && Cv::query()->where('encrypted_path', $file->stored_path)->exists();
+
+                if (!$isStillReferenced && !empty($file->stored_path) && Storage::disk('local')->exists($file->stored_path)) {
                     Storage::disk('local')->delete($file->stored_path);
                 }
 
@@ -304,7 +404,7 @@ class ExternalCvController extends Controller
 
         return redirect()
             ->route('admin.external-cvs.index')
-            ->with('success', 'Dossier d’indexation supprimé avec succès.');
+            ->with('success', 'Dossier d indexation supprime avec succes.');
     }
 
     public function open(ExternalCv $externalCv)
@@ -323,5 +423,53 @@ class ExternalCvController extends Controller
             'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"',
         ]);
+    }
+
+    private function canSafelyDeleteLinkedCv(Cv $cv, ExternalCv $externalCv): bool
+    {
+        if (!Schema::hasColumn('cvs', 'source_type') || !Schema::hasColumn('cvs', 'source_id')) {
+            return false;
+        }
+
+        if ($cv->source_type !== 'external_db' || (int) $cv->source_id !== (int) $externalCv->id) {
+            return false;
+        }
+
+        return !ExternalCv::query()
+            ->where('cv_id', $cv->id)
+            ->whereKeyNot($externalCv->id)
+            ->exists();
+    }
+
+    private function detachLinkedCvFromExternalSource(
+        Cv $cv,
+        ExternalCv $externalCv,
+        CvStorageOptimizationService $storageOptimization
+    ): void {
+        if (
+            !Schema::hasColumn('cvs', 'source_type')
+            || !Schema::hasColumn('cvs', 'source_id')
+        ) {
+            return;
+        }
+
+        $updates = [];
+
+        if ($cv->source_type === 'external_db' && (int) $cv->source_id === (int) $externalCv->id) {
+            if ($cv->encrypted_path === $externalCv->stored_path) {
+                $storageOptimization->preserveExternalFileForCv(
+                    $cv,
+                    (string) $externalCv->stored_path,
+                    (string) $externalCv->original_filename
+                );
+            }
+
+            $updates['source_type'] = null;
+            $updates['source_id'] = null;
+        }
+
+        if (!empty($updates)) {
+            $cv->update($updates);
+        }
     }
 }

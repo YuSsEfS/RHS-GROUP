@@ -56,7 +56,12 @@
                 </div>
                 <div class="full">
                     <label for="attachment">Piece jointe (optionnelle)</label>
-                    <input id="attachment" name="attachment" type="file">
+                    <div class="portal-file-field">
+                        <input id="attachment" name="attachment" type="file" class="portal-file-input">
+                        <div class="portal-field-help">
+                            Formats acceptes selon votre fichier de travail. Taille maximale: 5 Mo.
+                        </div>
+                    </div>
                 </div>
                 <div class="full form-actions-inline">
                     <button type="submit" class="admin-btn admin-btn-primary portal-btn-auto">Envoyer le rapport</button>

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\JobApplication;
+use App\Services\CandidateMatchingSyncService;
 use App\Services\CvIngestionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,9 +23,11 @@ class SyncApplicationCvToBankJob implements ShouldQueue
 
     public function __construct(public int $applicationId)
     {
+        $this->onConnection('database');
+        $this->onQueue('indexing');
     }
 
-    public function handle(CvIngestionService $ingestion): array
+    public function handle(CvIngestionService $ingestion, CandidateMatchingSyncService $matchingSync): array
     {
         $application = JobApplication::find($this->applicationId);
 
@@ -32,7 +35,10 @@ class SyncApplicationCvToBankJob implements ShouldQueue
             return ['status' => 'missing_application'];
         }
 
-        return $ingestion->syncApplicationCvToBank($application);
+        $result = $ingestion->syncApplicationCvToBank($application);
+        $matchingSync->dispatchForCvId($result['cv_id'] ?? null, 'application_cv_sync');
+
+        return $result;
     }
 
     public function failed(\Throwable $e): void

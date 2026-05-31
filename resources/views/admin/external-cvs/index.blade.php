@@ -1,10 +1,10 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Admin – Base externe')
+@section('title', 'Admin - Base externe')
 @section('page_title', 'Base externe')
 
 @section('page_subtitle')
-Gérez les lots importés depuis votre source externe et préparez leur indexation vers la CV Bank.
+Gerez les lots importes depuis votre source externe et preparez leur indexation vers la CV Bank.
 @endsection
 
 @section('top_actions')
@@ -19,14 +19,13 @@ Gérez les lots importés depuis votre source externe et préparez leur indexati
 @endsection
 
 @section('content')
-
 @php
   $batchStatusLabels = [
       'draft' => 'Brouillon',
       'pending' => 'En attente',
       'processing' => 'En cours',
-      'completed' => 'Terminé',
-      'failed' => 'Échoué',
+      'completed' => 'Termine',
+      'failed' => 'Echoue',
   ];
 
   $batchStatusColors = [
@@ -38,178 +37,243 @@ Gérez les lots importés depuis votre source externe et préparez leur indexati
   ];
 @endphp
 
-  @if(session('success'))
-    <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-body">
-        <div class="panel-badge" style="background:#e9f9ef;color:#15803d;border-color:#bbf7d0;">
-          {{ session('success') }}
-        </div>
+<div class="panel panel-safe">
+  <div class="panel-head">
+    <div class="panel-title">Filtres</div>
+  </div>
+
+  <div class="panel-body ui-filter-panel">
+    <form method="GET" action="{{ route('admin.external-cvs.index') }}" class="ui-filter-grid ui-filter-grid--compact">
+      <div>
+        <label class="ui-label" for="external-search">Recherche</label>
+        <input id="external-search" type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom du lot ou notes...">
       </div>
-    </div>
-  @endif
 
-  @if(session('error'))
-    <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-body">
-        <div class="panel-badge" style="background:#fef2f2;color:#b91c1c;border-color:#fecaca;">
-          {{ session('error') }}
-        </div>
+      <div>
+        <label class="ui-label" for="external-status">Statut</label>
+        <select id="external-status" name="status">
+          <option value="all" {{ ($status ?? 'all') === 'all' ? 'selected' : '' }}>Tous</option>
+          <option value="draft" {{ ($status ?? '') === 'draft' ? 'selected' : '' }}>Brouillon</option>
+          <option value="pending" {{ ($status ?? '') === 'pending' ? 'selected' : '' }}>En attente</option>
+          <option value="processing" {{ ($status ?? '') === 'processing' ? 'selected' : '' }}>En cours</option>
+          <option value="completed" {{ ($status ?? '') === 'completed' ? 'selected' : '' }}>Termine</option>
+          <option value="failed" {{ ($status ?? '') === 'failed' ? 'selected' : '' }}>Echoue</option>
+        </select>
       </div>
-    </div>
-  @endif
 
-  <div class="panel">
-    <div class="panel-head">
-      <div class="panel-title">Filtres</div>
-    </div>
+      <div class="table-ctrl-actions">
+        <button type="submit" class="btn btn-primary">Filtrer</button>
+        <a href="{{ route('admin.external-cvs.index') }}" class="btn btn-ghost">Reinitialiser</a>
+      </div>
+    </form>
+  </div>
+</div>
 
-    <div class="panel-body">
-      <form method="GET" action="{{ route('admin.external-cvs.index') }}">
-        <div class="info-grid">
-          <div class="info-item">
-            <div class="info-label">Recherche</div>
-            <div class="info-value">
-              <input
-                type="text"
-                name="q"
-                value="{{ $q ?? '' }}"
-                placeholder="Nom du lot ou notes..."
-                style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;background:#fff;"
-              >
-            </div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Statut</div>
-            <div class="info-value">
-              <select
-                name="status"
-                style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;background:#fff;"
-              >
-                <option value="all" {{ ($status ?? 'all') === 'all' ? 'selected' : '' }}>Tous</option>
-                <option value="draft" {{ ($status ?? '') === 'draft' ? 'selected' : '' }}>Brouillon</option>
-                <option value="processing" {{ ($status ?? '') === 'processing' ? 'selected' : '' }}>En cours</option>
-                <option value="completed" {{ ($status ?? '') === 'completed' ? 'selected' : '' }}>Terminé</option>
-                <option value="failed" {{ ($status ?? '') === 'failed' ? 'selected' : '' }}>Échoué</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="file-actions">
-          <button type="submit" class="btn btn-primary">Filtrer</button>
-          <a href="{{ route('admin.external-cvs.index') }}" class="btn btn-ghost">Réinitialiser</a>
-        </div>
-      </form>
+<div class="panel panel-safe table-safe">
+  <div class="panel-head">
+    <div class="panel-title">
+      Lots importes
+      <span class="panel-badge">{{ $batches->total() }}</span>
     </div>
   </div>
 
-  <div class="panel" style="margin-top:18px;">
-    <div class="panel-head">
-      <div class="panel-title">
-        Lots importés
-        <span class="panel-badge">{{ $batches->count() }}</span>
-      </div>
-    </div>
-
-    <div class="panel-body" style="padding:0;">
-      @if($batches->count())
-        <div style="overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;">
-            <thead style="background:#f8fafc;">
+  <div class="panel-body" style="padding:0;">
+    @if($batches->count())
+      <div class="table-wrap ui-table-scroll ui-table-sticky">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Dossier CV</th>
+              <th>Statut</th>
+              <th>Fichiers</th>
+              <th>Indexes</th>
+              <th>Doublons</th>
+              <th>Echecs</th>
+              <th>Cree par</th>
+              <th>Cree le</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($batches as $batch)
               <tr>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Nom</th>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Dossier CV</th>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Statut</th>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Fichiers</th>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Indexés</th>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Erreurs</th>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Créé par</th>
-                <th style="text-align:left;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Créé le</th>
-                <th style="text-align:right;padding:14px 16px;border-bottom:1px solid #e5e7eb;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach($batches as $batch)
-                <tr>
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    <div style="font-weight:700;color:#0f172a;">{{ $batch->name }}</div>
+                <td>
+                  <div class="ui-table-meta">
+                    <strong>{{ $batch->name }}</strong>
                     @if($batch->notes)
-                      <div style="margin-top:4px;font-size:13px;color:#64748b;">
-                        {{ $batch->notes }}
-                      </div>
+                      <span class="wrap-safe">{{ $batch->notes }}</span>
                     @endif
-                  </td>
+                  </div>
+                </td>
 
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    {{ $batch->folder?->name ?? '—' }}
-                  </td>
+                <td class="text-safe">{{ $batch->folder?->name ?? '-' }}</td>
 
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    <span class="panel-badge" style="{{ $batchStatusColors[$batch->status] ?? '' }}">
-                      {{ $batchStatusLabels[$batch->status] ?? ucfirst($batch->status) }}
-                    </span>
-                  </td>
+                <td>
+                  <span class="panel-badge" style="{{ $batchStatusColors[$batch->status] ?? '' }}">
+                    {{ $batchStatusLabels[$batch->status] ?? ucfirst($batch->status) }}
+                  </span>
+                </td>
 
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    {{ $batch->total_files }}
-                  </td>
+                <td>{{ $batch->total_files }}</td>
+                <td>{{ $batch->indexed_files }}</td>
+                <td>{{ $batch->duplicate_files ?? 0 }}</td>
+                <td>{{ $batch->failed_files }}</td>
+                <td class="text-safe">{{ $batch->creator?->name ?? '-' }}</td>
+                <td>{{ optional($batch->created_at)->format('Y-m-d H:i') ?? '-' }}</td>
 
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    {{ $batch->indexed_files }}
-                  </td>
+                <td>
+                  <div class="td-actions">
+                    <a class="btn btn-ghost btn-sm" href="{{ route('admin.external-cvs.show', $batch) }}">
+                      Ouvrir
+                    </a>
 
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    {{ $batch->failed_files }}
-                  </td>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm js-open-external-delete-modal"
+                      data-action="{{ route('admin.external-cvs.destroy', $batch) }}"
+                      data-batch-name="{{ $batch->name }}"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
 
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    {{ $batch->creator?->name ?? '—' }}
-                  </td>
-
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">
-                    {{ optional($batch->created_at)->format('Y-m-d H:i') ?? '—' }}
-                  </td>
-
-                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;text-align:right;">
-                    <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
-                      <a class="btn btn-ghost" href="{{ route('admin.external-cvs.show', $batch) }}">
-                        Ouvrir
-                      </a>
-
-                      <form method="POST"
-                            action="{{ route('admin.external-cvs.destroy', $batch) }}"
-                            onsubmit="return confirm('Supprimer ce dossier d’indexation ?')">
-                        @csrf
-                        @method('DELETE')
-                        <input type="hidden" name="delete_mode" value="batch_only">
-                        <button type="submit" class="btn btn-danger">
-                          Supprimer
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              @endforeach
-            </tbody>
-          </table>
+      <div style="padding:18px 20px;border-top:1px solid #eef2f7;">
+        {{ $batches->links() }}
+      </div>
+    @else
+      <div class="ui-empty-state">
+        <div class="ui-empty-title">Aucun lot importe</div>
+        <div class="ui-empty-copy">
+          Commencez par creer un nouveau lot et importer vos CV externes.
         </div>
-      @else
-        <div style="padding:34px 24px;text-align:center;">
-          <div style="font-size:18px;font-weight:700;color:#0f172a;margin-bottom:8px;">
-            Aucun lot importé
-          </div>
-          <div style="color:#64748b;margin-bottom:18px;">
-            Commencez par créer un nouveau lot et importer vos CV externes.
-          </div>
+        <div class="ui-inline-actions" style="justify-content:center; margin-top:18px;">
           <a href="{{ route('admin.external-cvs.create') }}" class="btn btn-primary">
             Nouveau lot
           </a>
         </div>
-      @endif
-    </div>
+      </div>
+    @endif
   </div>
+</div>
 
+<div class="cv-modal-backdrop" id="externalDeleteBatchModal">
+  <div class="cv-modal" role="dialog" aria-modal="true" aria-labelledby="externalDeleteBatchTitle">
+    <div class="cv-modal-head">
+      <div class="cv-modal-title" id="externalDeleteBatchTitle">Supprimer un lot externe</div>
+
+      <button type="button" class="cv-modal-close" id="closeExternalDeleteBatchModal" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <form method="POST" id="externalDeleteBatchForm">
+      @csrf
+      @method('DELETE')
+
+      <div class="cv-modal-body">
+        <div class="cv-modal-text">
+          <strong id="externalDeleteBatchName">Lot externe</strong><br>
+          Choisissez si vous voulez supprimer uniquement le lot, ou supprimer aussi les CV indexes qui lui appartiennent reellement.
+        </div>
+
+        <div class="cv-radio-list">
+          <div class="cv-radio-card">
+            <label>
+              <input type="radio" name="delete_mode" value="batch_only" checked>
+              <div>
+                <div class="cv-radio-title">Supprimer uniquement le lot</div>
+                <div class="cv-radio-desc">
+                  Le lot externe disparait, mais les CV conserves dans la CV Bank restent consultables.
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="cv-radio-card">
+            <label>
+              <input type="radio" name="delete_mode" value="batch_and_cvs">
+              <div>
+                <div class="cv-radio-title">Supprimer le lot et ses CV proprietaires</div>
+                <div class="cv-radio-desc">
+                  Seuls les CV crees par ce lot et non partages ailleurs seront supprimes avec leurs fichiers.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="cv-modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelExternalDeleteBatchModal">Annuler</button>
+        <button type="submit" class="btn cv-danger-btn">Confirmer la suppression</button>
+      </div>
+    </form>
+  </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modal = document.getElementById('externalDeleteBatchModal');
+  const form = document.getElementById('externalDeleteBatchForm');
+  const title = document.getElementById('externalDeleteBatchName');
+  const openButtons = document.querySelectorAll('.js-open-external-delete-modal');
+  const closeBtn = document.getElementById('closeExternalDeleteBatchModal');
+  const cancelBtn = document.getElementById('cancelExternalDeleteBatchModal');
+
+  if (!modal || !form) {
+    return;
+  }
+
+  function openModal(action, batchName) {
+    form.action = action;
+    if (title) {
+      title.textContent = batchName || 'Lot externe';
+    }
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  openButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      openModal(button.dataset.action, button.dataset.batchName);
+    });
+  });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeModal);
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeModal);
+  }
+
+  modal.addEventListener('click', function (event) {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeModal();
+    }
+  });
+});
+</script>
+@endpush

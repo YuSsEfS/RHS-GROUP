@@ -420,7 +420,11 @@ class RecruitmentRequestDocxImporter
                         break;
                     }
 
-                    $candidate = $this->sanitizeExtractedValue($candidate, $fieldKey);
+                    $candidate = $this->sanitizeExtractedValue(
+                        $candidate,
+                        $fieldKey,
+                        in_array($fieldKey, ['missions', 'personal_qualities', 'specific_knowledge', 'other_benefits'], true)
+                    );
 
                     if ($candidate !== '') {
                         $parts[] = $candidate;
@@ -605,16 +609,18 @@ class RecruitmentRequestDocxImporter
 
     private function normalizeFieldValue(string $fieldKey, string $value): string
     {
-        $value = $this->sanitizeExtractedValue($value, $fieldKey);
+        $value = $this->sanitizeExtractedValue(
+            $value,
+            $fieldKey,
+            in_array($fieldKey, ['missions', 'personal_qualities', 'specific_knowledge', 'other_benefits'], true)
+        );
 
         if ($value === '') {
             return '';
         }
 
         if (in_array($fieldKey, ['missions', 'personal_qualities', 'specific_knowledge', 'other_benefits'], true)) {
-            $lines = preg_split('/\n+/u', $value) ?: [];
-            $lines = array_map(fn ($line) => trim(preg_replace('/\s+/u', ' ', $line)), $lines);
-            $lines = array_filter($lines, fn ($line) => $line !== '');
+            $lines = $this->splitBlockItems($value, $fieldKey);
             return trim(implode("\n", $lines));
         }
 
@@ -714,6 +720,86 @@ class RecruitmentRequestDocxImporter
         return $value;
     }
 
+    private function splitBlockItems(string $value, string $fieldKey): array
+    {
+        $value = str_replace(["\r\n", "\r"], "\n", $value);
+        $value = preg_replace('/[•●▪◦]\s*/u', "\n", $value);
+        $value = preg_replace('/\s*(?:\n|;)\s*/u', "\n", $value);
+
+        if (in_array($fieldKey, ['personal_qualities', 'specific_knowledge'], true)) {
+            $value = preg_replace('/\s+\b(et|and|&)\b\s*$/iu', '', $value);
+            $value = preg_replace('/\s+\b(et|and|&)\b\s+(?=[A-ZÀ-Ÿ][\p{L}])/u', "\n", $value);
+        }
+
+        if ($fieldKey === 'personal_qualities') {
+            $value = preg_replace('/\s+(?=(?:Rigueur|Autonomie|Organisation|Leadership|Ponctualite|Ponctualité|Adaptabilite|Adaptabilité|Communication|Confidentialite|Confidentialité|Proactivite|Proactivité|Esprit\s+d[’\']?analyse|Esprit\s+d[’\']?equipe|Esprit\s+d[’\']?équipe|Sens\s+du\s+service|Aisance\s+relationnelle)\b)/u', "\n", $value);
+        }
+
+        if ($fieldKey === 'specific_knowledge') {
+            $value = preg_replace('/\s+(?=(?:Connaissance|Connaissances|Maitrise|Maîtrise|Bonne\s+maitrise|Bonne\s+maîtrise|Normes|Techniques|Excel|SAP|Odoo|ERP|CRM|Douane|Transit|Incoterms|Import\s+export|Logistique|Qualite|Qualité|ISO)\b)/u', "\n", $value);
+        }
+
+        $items = preg_split('/\n+/u', $value) ?: [];
+        $items = array_map(function ($line) {
+            $line = trim(preg_replace('/\s+/u', ' ', $line));
+            $line = preg_replace('/\s+\b(et|and|&)\b\s*$/iu', '', $line);
+
+            return trim($line);
+        }, $items);
+        $items = $this->mergeContinuationItems($items);
+        $items = array_filter($items, fn ($line) => $line !== '' && !$this->isEmptyBlockItem($line));
+
+        $seen = [];
+        $result = [];
+
+        foreach ($items as $item) {
+            $key = $this->normalizeLooseLabel($item);
+
+            if ($key === '' || isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $result[] = $item;
+        }
+
+        return $result;
+    }
+
+    private function mergeContinuationItems(array $items): array
+    {
+        $merged = [];
+
+        foreach ($items as $item) {
+            $item = trim((string) $item);
+
+            if ($item === '') {
+                continue;
+            }
+
+            $previousIndex = count($merged) - 1;
+
+            if (
+                $previousIndex >= 0
+                && preg_match('/\b(?:de|du|des|d|la|le|les|et|ou|avec|pour|sur)$/iu', $merged[$previousIndex])
+            ) {
+                $merged[$previousIndex] = trim($merged[$previousIndex] . ' ' . $item);
+                continue;
+            }
+
+            $merged[] = $item;
+        }
+
+        return $merged;
+    }
+
+    private function isEmptyBlockItem(string $value): bool
+    {
+        $normalized = $this->normalizeLooseLabel($value);
+
+        return in_array($normalized, ['', 'et', 'and', 'ou', 'or', 'n a', 'na', 'n a', 'neant', 'aucun', 'aucune'], true);
+    }
+
     private function extractInlineFieldValue(string $line, string $label, ?string $fieldKey = null): string
     {
         $labelPattern = preg_quote($label, '/');
@@ -733,7 +819,6 @@ class RecruitmentRequestDocxImporter
             '/(?:^|\s)' . $labelPattern . '\s*[-–—]\s*(.*?)(?=\s+(?:' . $nextLabelRegex . ')\s*[:|]|\s*$)/iu',
             '/(?:^|\s)' . $labelPattern . '\s*\.{2,}\s*(.*?)(?=\s+(?:' . $nextLabelRegex . ')\s*[:|]|\s*$)/iu',
             '/(?:^|\s)' . $labelPattern . '\s*…+\s*(.*?)(?=\s+(?:' . $nextLabelRegex . ')\s*[:|]|\s*$)/iu',
-            '/(?:^|\s)' . $labelPattern . '\s+(.+?)(?=\s+(?:' . $nextLabelRegex . ')\s*[:|]|\s*$)/iu',
         ];
 
         foreach ($patterns as $pattern) {
@@ -770,7 +855,7 @@ class RecruitmentRequestDocxImporter
         return $this->extractInlineFieldValue($line, $label, $fieldKey);
     }
 
-    private function sanitizeExtractedValue(string $value, ?string $fieldKey): string
+    private function sanitizeExtractedValue(string $value, ?string $fieldKey, bool $preserveInlineLabels = false): string
     {
         $value = $this->cleanValue($value);
 
@@ -811,6 +896,8 @@ class RecruitmentRequestDocxImporter
             'aucun',
             'aucune',
             'non',
+            'et',
+            '&',
             'vide',
             'null',
             '---',
@@ -834,6 +921,7 @@ class RecruitmentRequestDocxImporter
             }
         }
 
+        if (!$preserveInlineLabels) {
         foreach ($this->getAllLabelsSortedByLength() as $knownLabel) {
             $pattern = '/^(.*?)\s+(?=' . preg_quote($knownLabel, '/') . '\s*(?:[:|]|\.{2,}|…+|-|–|—)?)/iu';
             if (preg_match($pattern, $value, $m)) {
@@ -842,6 +930,7 @@ class RecruitmentRequestDocxImporter
                     $value = $candidate;
                 }
             }
+        }
         }
 
         if ($fieldKey === 'position_title') {

@@ -81,6 +81,40 @@
     padding: 100px 0;
 }
 
+.services-subnav-section {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255,255,255,.94);
+    border-bottom: 1px solid #eee;
+    backdrop-filter: blur(10px);
+}
+
+.services-subnav {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.services-subnav a {
+    color: #00265f;
+    text-decoration: none;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #e6eaf1;
+    background: #fff;
+}
+
+.services-subnav a:hover {
+    color: #fff;
+    background: #e23b31;
+    border-color: #e23b31;
+}
+
 .services-grid {
     display: grid;
     grid-template-columns: repeat(3,1fr);
@@ -140,6 +174,127 @@
     color: #e23b31;
     font-weight: 600;
     margin-bottom: 6px;
+}
+
+.service-detail-section,
+.code-download-section {
+    scroll-margin-top: 92px;
+}
+
+.service-detail-section {
+    padding: 90px 0;
+    background: #fff;
+}
+
+.service-detail-section--alt {
+    background: #f7f8fb;
+}
+
+.service-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+    gap: 42px;
+    align-items: start;
+}
+
+.service-detail-section h2,
+.code-download-section h2 {
+    font-size: 34px;
+    line-height: 1.2;
+    font-weight: 900;
+    color: #00265f;
+    margin-bottom: 18px;
+}
+
+.service-detail-section p,
+.code-download-section p {
+    color: #4b5563;
+    line-height: 1.75;
+    margin-bottom: 14px;
+}
+
+.service-points-card {
+    background: #fff;
+    border-left: 6px solid #e23b31;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 16px 36px rgba(0,0,0,.08);
+}
+
+.service-points-card h3 {
+    color: #00265f;
+    font-weight: 900;
+    margin-bottom: 14px;
+}
+
+.service-points-card ul {
+    list-style: none;
+}
+
+.service-points-card li {
+    color: #00265f;
+    font-weight: 700;
+    line-height: 1.55;
+    margin-bottom: 12px;
+    padding-left: 18px;
+    position: relative;
+}
+
+.service-points-card li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .65em;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e23b31;
+}
+
+.code-download-section {
+    padding: 80px 0;
+    background: #fff;
+}
+
+.code-download-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 28px;
+    align-items: center;
+    background: #f7f8fb;
+    border: 1px solid #e6eaf1;
+    border-bottom: 3px solid #00265f;
+    border-radius: 14px;
+    padding: 34px;
+}
+
+.code-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #e23b31;
+    color: #fff;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.code-download-btn:hover {
+    background: #c92927;
+}
+
+.pdf-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    color: #e23b31;
+    background: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 900;
 }
 
 /* BUTTON */
@@ -202,6 +357,16 @@
 
     .services-grid {
         grid-template-columns: 1fr;
+    }
+
+    .service-detail-grid,
+    .code-download-card {
+        grid-template-columns: 1fr;
+    }
+
+    .code-download-btn {
+        justify-content: center;
+        white-space: normal;
     }
 }
 

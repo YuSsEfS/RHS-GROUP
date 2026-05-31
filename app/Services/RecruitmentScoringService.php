@@ -18,7 +18,7 @@ class RecruitmentScoringService
     ) {
     }
 
-    public function scoreRequestMatches(RecruitmentRequest $recruitmentRequest, ?int $folderId = null): int
+    public function scoreRequestMatches(RecruitmentRequest $recruitmentRequest, ?int $folderId = null, array $options = []): int
     {
         $requirements = $recruitmentRequest->ai_normalized_requirements;
 
@@ -26,32 +26,110 @@ class RecruitmentScoringService
             $requirements = [];
         }
 
+        $targetOfferIds = collect($requirements['job_offer_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($targetOfferIds->isEmpty() && !empty($recruitmentRequest->job_offer_id)) {
+            $targetOfferIds = collect([(int) $recruitmentRequest->job_offer_id]);
+        }
+
+        $targetFolderIds = collect($requirements['cv_folder_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($folderId) {
+            $targetFolderIds->push((int) $folderId);
+        } elseif ($targetFolderIds->isEmpty() && !empty($recruitmentRequest->cv_folder_id)) {
+            $targetFolderIds->push((int) $recruitmentRequest->cv_folder_id);
+        }
+
+        $targetQuery = $this->targetCvsQuery($targetOfferIds->all(), $targetFolderIds->unique()->values()->all());
+        $total = (clone $targetQuery)->count();
         $matches = 0;
+        $processed = 0;
 
-        foreach ($this->getTargetCvs($recruitmentRequest->job_offer_id, $folderId) as $cv) {
-            $profile = $this->decodeProfile($cv->structured_profile);
-            $profile = $this->enrichProfileForScoring($cv, $profile);
+        if (is_callable($options['on_start'] ?? null)) {
+            $options['on_start']($total);
+        }
 
-            $local = $this->localScorer->score($requirements, $profile);
-            $final = $this->formatLocalResult($local);
+        foreach ($targetQuery->orderByDesc('id')->cursor() as $cv) {
+            if (is_callable($options['cancelled'] ?? null) && $options['cancelled']()) {
+                break;
+            }
 
-            CvMatch::updateOrCreate(
-                [
-                    'recruitment_request_id' => $recruitmentRequest->id,
-                    'cv_id' => $cv->id,
-                ],
-                [
-                    'score' => $final['score'] ?? 0,
-                    'score_breakdown' => $final['breakdown'] ?? [],
-                    'summary' => $final['summary'] ?? '',
-                    'selected' => false,
-                ]
-            );
+            if ($this->scoreCvAgainstRequest($recruitmentRequest, $cv, $requirements)) {
+                $matches++;
+            }
 
-            $matches++;
+            $processed++;
+
+            if (is_callable($options['on_progress'] ?? null)) {
+                $options['on_progress']($processed, $matches, $total);
+            }
         }
 
         return $matches;
+    }
+
+    public function scoreCvAgainstRequest(RecruitmentRequest $recruitmentRequest, Cv $cv, ?array $requirements = null): bool
+    {
+        $requirements ??= $this->decodeProfile($recruitmentRequest->ai_normalized_requirements);
+
+        if (empty($requirements) || empty($cv->structured_profile)) {
+            return false;
+        }
+
+        if (!$this->cvIsEligibleForRequest($recruitmentRequest, $cv, $requirements)) {
+            return false;
+        }
+
+        $profile = $this->decodeProfile($cv->structured_profile);
+        $profile = $this->enrichProfileForScoring($cv, $profile);
+
+        $criteriaSignature = $this->criteriaSignature($requirements);
+        $profileSignature = $this->profileSignature($profile);
+
+        $match = CvMatch::firstOrNew([
+            'recruitment_request_id' => $recruitmentRequest->id,
+            'cv_id' => $cv->id,
+        ]);
+
+        if ($match->exists) {
+            $breakdown = is_array($match->score_breakdown ?? null)
+                ? $match->score_breakdown
+                : (json_decode($match->score_breakdown ?? '[]', true) ?: []);
+            $meta = is_array($breakdown['_meta'] ?? null) ? $breakdown['_meta'] : [];
+
+            if (
+                ($meta['criteria_signature'] ?? null) === $criteriaSignature
+                && ($meta['profile_signature'] ?? null) === $profileSignature
+            ) {
+                return true;
+            }
+        }
+
+        $local = $this->localScorer->score($requirements, $profile);
+        $local['explanations'] = $this->attachCriterionEvidence($local['explanations'] ?? [], $profile);
+        $final = $this->formatLocalResult($local, $criteriaSignature, $profileSignature);
+
+        $match->fill([
+            'score' => $final['score'] ?? 0,
+            'score_breakdown' => $final['breakdown'] ?? [],
+            'summary' => $final['summary'] ?? '',
+        ]);
+
+        if (!$match->exists) {
+            $match->selected = false;
+        }
+
+        $match->save();
+
+        return true;
     }
 
     public function analyzeMatchWithAi(CvMatch $match): array
@@ -92,16 +170,21 @@ class RecruitmentScoringService
             ? round((float) $final['ai_score'], 2)
             : null;
 
+        $existingBreakdown = is_array($match->score_breakdown ?? null)
+            ? $match->score_breakdown
+            : (json_decode($match->score_breakdown ?? '[]', true) ?: []);
+        $existingMeta = is_array($existingBreakdown['_meta'] ?? null) ? $existingBreakdown['_meta'] : [];
+
         $newBreakdown = array_merge(
             is_array($final['breakdown'] ?? null) ? $final['breakdown'] : [],
             [
-                '_meta' => [
+                '_meta' => array_merge($existingMeta, [
                     'local_score' => round((float) ($final['local_score'] ?? $local['score'] ?? 0), 2),
                     'ai_score' => $matchingIa,
                     'final_score' => round((float) ($final['score'] ?? $match->score), 2),
                     'ai_available' => (bool) ($final['ai_available'] ?? false),
                     'last_analysis' => now()->format('Y-m-d H:i:s'),
-                ],
+                ]),
             ]
         );
 
@@ -144,6 +227,10 @@ class RecruitmentScoringService
 
         $text = (string) ($cv->encrypted_extracted_text ?? data_get($profile, 'summary') ?? '');
 
+        if ($text !== '') {
+            $profile['raw_text'] = $text;
+        }
+
         if (empty($profile['years_experience'])) {
             $profile['years_experience'] = $this->estimateExperienceFromText($text);
         }
@@ -155,7 +242,7 @@ class RecruitmentScoringService
         return $profile;
     }
 
-    public function formatLocalResult(array $local): array
+    public function formatLocalResult(array $local, ?string $criteriaSignature = null, ?string $profileSignature = null): array
     {
         return [
             'score' => (float) ($local['score'] ?? 0),
@@ -182,29 +269,49 @@ class RecruitmentScoringService
                     'final_score' => round((float) ($local['score'] ?? 0), 2),
                     'ai_available' => false,
                     'last_analysis' => null,
+                    'criteria_signature' => $criteriaSignature,
+                    'profile_signature' => $profileSignature,
+                    'explanations' => is_array($local['explanations'] ?? null) ? $local['explanations'] : [],
                 ],
             ],
             'summary' => (string) ($local['summary'] ?? 'Évaluation locale effectuée.'),
         ];
     }
 
-    private function getTargetCvs($jobOfferId = null, ?int $folderId = null)
+    private function getTargetCvs($jobOfferIds = null, $folderIds = null)
+    {
+        return $this->targetCvsQuery($jobOfferIds, $folderIds)
+            ->orderByDesc('id')
+            ->cursor();
+    }
+
+    private function targetCvsQuery($jobOfferIds = null, $folderIds = null)
     {
         $cvIds = collect();
+        $jobOfferIds = collect(is_array($jobOfferIds) ? $jobOfferIds : [$jobOfferIds])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $folderIds = collect(is_array($folderIds) ? $folderIds : [$folderIds])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
-        if ($folderId && Schema::hasColumn('cvs', 'cv_folder_id')) {
+        if ($folderIds->isNotEmpty() && Schema::hasColumn('cvs', 'cv_folder_id')) {
             $cvIds = $cvIds->merge(
                 Cv::query()
-                    ->where('cv_folder_id', $folderId)
+                    ->whereIn('cv_folder_id', $folderIds->all())
                     ->pluck('id')
             );
         }
 
-        if (!empty($jobOfferId)) {
+        if ($jobOfferIds->isNotEmpty()) {
             $applications = JobApplication::query()
-                ->where('job_offer_id', (int) $jobOfferId)
+                ->whereIn('job_offer_id', $jobOfferIds->all())
                 ->whereNotNull('cv_path')
-                ->get();
+                ->cursor();
 
             foreach ($applications as $application) {
                 $relativePath = ltrim((string) $application->cv_path, '/');
@@ -230,11 +337,81 @@ class RecruitmentScoringService
 
         if ($cvIds->isNotEmpty()) {
             $query->whereIn('id', $cvIds->unique()->values()->all());
-        } elseif (!empty($jobOfferId) || !empty($folderId)) {
+        } elseif ($jobOfferIds->isNotEmpty() || $folderIds->isNotEmpty()) {
             $query->whereRaw('1 = 0');
         }
 
-        return $query->orderByDesc('id')->get();
+        return $query;
+    }
+
+    private function criteriaSignature(array $requirements): string
+    {
+        ksort($requirements);
+
+        return hash('sha256', json_encode($requirements, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    private function profileSignature(array $profile): string
+    {
+        foreach (['raw_text'] as $heavyKey) {
+            unset($profile[$heavyKey]);
+        }
+
+        ksort($profile);
+
+        return hash('sha256', json_encode($profile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    private function attachCriterionEvidence(array $explanations, array $profile): array
+    {
+        $evidence = [
+            'title' => $this->normalizeWhitespace((string) data_get($profile, 'title')),
+            'education' => $this->normalizeWhitespace((string) data_get($profile, 'education')),
+            'experience' => data_get($profile, 'years_experience') !== null
+                ? $this->normalizeWhitespace((string) data_get($profile, 'years_experience')) . ' annees detectees'
+                : '',
+            'skills' => implode(', ', array_slice((array) data_get($profile, 'skills', []), 0, 10)),
+            'languages' => implode(', ', array_slice((array) data_get($profile, 'languages', []), 0, 6)),
+            'location' => $this->normalizeWhitespace((string) (data_get($profile, 'city') ?: data_get($profile, 'location'))),
+            'availability' => $this->normalizeWhitespace((string) data_get($profile, 'availability')),
+        ];
+
+        foreach ($evidence as $key => $value) {
+            if ($value === '') {
+                continue;
+            }
+
+            $prefix = isset($explanations[$key]) && $explanations[$key] !== ''
+                ? rtrim((string) $explanations[$key])
+                : 'Score base sur les informations structurees du CV.';
+
+            $explanations[$key] = $prefix . ' Evidence CV : ' . $value . '.';
+        }
+
+        return $explanations;
+    }
+
+    private function cvIsEligibleForRequest(RecruitmentRequest $request, Cv $cv, array $requirements): bool
+    {
+        $folderIds = collect($requirements['cv_folder_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($folderIds->isEmpty() && !empty($requirements['cv_folder_id'])) {
+            $folderIds->push((int) $requirements['cv_folder_id']);
+        }
+
+        if ($folderIds->isEmpty() && !empty($request->cv_folder_id)) {
+            $folderIds->push((int) $request->cv_folder_id);
+        }
+
+        if ($folderIds->isNotEmpty() && (int) ($cv->cv_folder_id ?? 0) > 0) {
+            return $folderIds->contains((int) $cv->cv_folder_id);
+        }
+
+        return true;
     }
 
     private function estimateExperienceFromText(?string $text): ?float

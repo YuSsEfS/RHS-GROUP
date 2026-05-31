@@ -8,11 +8,11 @@
   <section class="catalogue-hero">
     <div class="container jobs-hero-inner">
       <div class="jobs-hero-content">
-        <p class="jobs-eyebrow">CATALOGUE DE FORMATION</p>
-        <h1 class="jobs-title">
-          Découvrez nos <span>formations</span>
+        <p class="jobs-eyebrow" data-cms-key="formations.hero.eyebrow">CATALOGUE DE FORMATION</p>
+        <h1 class="jobs-title" data-cms-key="formations.hero.title">
+          Découvrez nos <span data-cms-key="formations.hero.title_span">formations</span>
         </h1>
-        <p class="jobs-subtitle">
+        <p class="jobs-subtitle" data-cms-key="formations.hero.subtitle">
           RHS GROUP accompagne entreprises et professionnels avec des formations pratiques et certifiantes.
         </p>
       </div>
@@ -36,7 +36,7 @@
           <div class="jobs-filter">
             <label class="sr-only" for="domain">Domaine</label>
             <select id="domain" name="domain">
-              <option value="">Tous les domaines</option>
+              <option value="" data-cms-key="formations.filters.domains">Tous les domaines</option>
               @foreach($domains as $d)
                 <option value="{{ $d }}" {{ request('domain') == $d ? 'selected' : '' }}>{{ ucfirst($d) }}</option>
               @endforeach
@@ -47,7 +47,7 @@
           <div class="jobs-filter">
             <label class="sr-only" for="public">Public</label>
             <select id="public" name="public">
-              <option value="">Tous les publics</option>
+              <option value="" data-cms-key="formations.filters.publics">Tous les publics</option>
               @foreach($publics as $p)
                 <option value="{{ $p }}" {{ request('public') == $p ? 'selected' : '' }}>{{ ucfirst($p) }}</option>
               @endforeach
@@ -58,7 +58,7 @@
           <div class="jobs-filter">
             <label class="sr-only" for="format">Format</label>
             <select id="format" name="format">
-              <option value="">Tous les formats</option>
+              <option value="" data-cms-key="formations.filters.formats">Tous les formats</option>
               @foreach($formats as $f)
                 <option value="{{ $f }}" {{ request('format') == $f ? 'selected' : '' }}>{{ ucfirst($f) }}</option>
               @endforeach
@@ -67,8 +67,8 @@
 
           {{-- Actions --}}
           <div class="jobs-filter-actions">
-            <button type="submit" class="jobs-filter-btn">Filtrer</button>
-            <a href="{{ url()->current() }}" class="jobs-filter-reset">Réinitialiser</a>
+            <button type="submit" class="jobs-filter-btn" data-cms-key="formations.filters.submit">Filtrer</button>
+            <a href="{{ url()->current() }}" class="jobs-filter-reset" data-cms-key="formations.filters.reset">Réinitialiser</a>
           </div>
         </div>
       </form>
@@ -119,7 +119,7 @@
 
     {{-- CTA --}}
     <a href="{{ route('formations.show', $f->id) }}" class="formation-btn">
-    Voir la formation →
+    <span data-cms-key="formations.card.button">Voir la formation</span> →
 </a>
 
 
@@ -129,8 +129,8 @@
 
 <div class="formations-empty">
     <div class="jobs-empty-icon">📭</div>
-    <h3>Aucune formation disponible</h3>
-    <p>Revenez bientôt, de nouvelles formations seront publiées.</p>
+    <h3 data-cms-key="formations.empty.title">Aucune formation disponible</h3>
+    <p data-cms-key="formations.empty.text">Revenez bientôt, de nouvelles formations seront publiées.</p>
 </div>
 
 @endforelse

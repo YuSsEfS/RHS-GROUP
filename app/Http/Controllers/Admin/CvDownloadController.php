@@ -4,13 +4,57 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RecruitmentRequest;
-use Illuminate\Support\Facades\Storage;
+use App\Services\CvStorageOptimizationService;
+use Illuminate\Http\Request;
 use ZipArchive;
 
 class CvDownloadController extends Controller
 {
-    public function downloadSelected(RecruitmentRequest $recruitmentRequest)
+    public function downloadSelected(
+        Request $request,
+        RecruitmentRequest $recruitmentRequest,
+        CvStorageOptimizationService $storageOptimization
+    )
     {
+        if ($request->isMethod('post')) {
+            $autoSelectCount = max(0, min((int) $request->input('auto_select_count', 0), 5000));
+            $visibleIds = collect($request->input('visible_matches', []))
+                ->filter(fn ($value) => is_numeric($value))
+                ->map(fn ($value) => (int) $value)
+                ->unique()
+                ->values();
+            $selectedIds = collect($request->input('selected_matches', []))
+                ->filter(fn ($value) => is_numeric($value))
+                ->map(fn ($value) => (int) $value)
+                ->unique()
+                ->values();
+
+            if ($autoSelectCount > 0) {
+                $selectedIds = $recruitmentRequest->matches()
+                    ->orderByDesc('score')
+                    ->limit($autoSelectCount)
+                    ->pluck('id');
+
+                $recruitmentRequest->matches()->update(['selected' => false]);
+
+                if ($selectedIds->isNotEmpty()) {
+                    $recruitmentRequest->matches()
+                        ->whereIn('id', $selectedIds->all())
+                        ->update(['selected' => true]);
+                }
+            } elseif ($visibleIds->isNotEmpty()) {
+                $recruitmentRequest->matches()
+                    ->whereIn('id', $visibleIds->all())
+                    ->update(['selected' => false]);
+
+                if ($selectedIds->isNotEmpty()) {
+                    $recruitmentRequest->matches()
+                        ->whereIn('id', $selectedIds->all())
+                        ->update(['selected' => true]);
+                }
+            }
+        }
+
         $matches = $recruitmentRequest
             ->matches()
             ->where('selected', true)
@@ -52,24 +96,20 @@ class CvDownloadController extends Controller
 
             $cv = $match->cv;
 
-            if (!$cv->encrypted_path) {
+            $binary = $storageOptimization->readBinary($cv);
+
+            if ($binary === null) {
                 continue;
             }
 
-            if (!Storage::disk('local')->exists($cv->encrypted_path)) {
-                continue;
-            }
-
-            $fullPath = Storage::disk('local')->path($cv->encrypted_path);
-
+            $extension = pathinfo((string) ($cv->original_filename ?: 'cv'), PATHINFO_EXTENSION);
             $safeFilename =
                 ($cv->candidate_name ?? 'cv') .
                 '-' .
                 $cv->id .
-                '.' .
-                pathinfo($fullPath, PATHINFO_EXTENSION);
+                ($extension ? '.' . $extension : '');
 
-            $zip->addFile($fullPath, $safeFilename);
+            $zip->addFromString($safeFilename, $binary);
 
             $addedFiles++;
         }

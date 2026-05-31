@@ -44,7 +44,7 @@ class UserController extends Controller
         return view('admin.users.create', $this->formData(new User([
             'role' => User::ROLE_EMPLOYEE,
             'status' => User::STATUS_PENDING,
-            'permissions' => [],
+            'permissions' => User::defaultPermissionsForRole(User::ROLE_EMPLOYEE),
         ])));
     }
 
@@ -112,13 +112,20 @@ class UserController extends Controller
     private function fillUser(User $user, array $validated, bool $creating): void
     {
         $status = $validated['status'];
+        $role = $validated['role'];
+        $submittedPermissions = array_values(array_unique($validated['permissions'] ?? []));
+        $allowedPermissions = User::allowedPermissionsForRole($role);
+
+        if ($allowedPermissions !== ['*']) {
+            $submittedPermissions = array_values(array_intersect($submittedPermissions, $allowedPermissions));
+        }
 
         $payload = [
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
+            'role' => $role,
             'status' => $status,
-            'permissions' => array_values($validated['permissions'] ?? []),
+            'permissions' => $submittedPermissions,
         ];
 
         if (!empty($validated['password'])) {
@@ -135,10 +142,21 @@ class UserController extends Controller
 
         if ($creating) {
             $user->fill($payload)->save();
+            $this->flushPermissionCacheIfAvailable();
+
+            if (auth()->check() && auth()->id() === $user->id) {
+                auth()->setUser($user->fresh());
+            }
+
             return;
         }
 
         $user->fill($payload)->save();
+        $this->flushPermissionCacheIfAvailable();
+
+        if (auth()->check() && auth()->id() === $user->id) {
+            auth()->setUser($user->fresh());
+        }
     }
 
     private function formData(User $user): array
@@ -148,6 +166,14 @@ class UserController extends Controller
             'roles' => User::availableRoles(),
             'statuses' => User::availableStatuses(),
             'permissions' => User::availablePermissions(),
+            'permissionRoleMap' => User::permissionRoleMap(),
         ];
+    }
+
+    private function flushPermissionCacheIfAvailable(): void
+    {
+        if (class_exists(\Spatie\Permission\PermissionRegistrar::class)) {
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        }
     }
 }

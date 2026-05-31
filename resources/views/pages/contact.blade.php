@@ -47,7 +47,7 @@
             <div class="contact-left">
 
                 {{-- CARDS --}}
-                <div class="contact-cards">
+                <div id="contact-coordonnees" class="contact-cards">
 
                     {{-- PHONE --}}
                     <article class="contact-card" data-reveal>
@@ -131,7 +131,7 @@
                 </div>
 
                 {{-- MAP --}}
-                <div class="contact-map" data-reveal>
+                <div id="contact-map" class="contact-map" data-reveal>
                     <div class="contact-map-head">
                         <h3 data-cms-key="contact.map.title">Nous trouver</h3>
                         <a target="_blank"
@@ -227,11 +227,9 @@
                         </p>
                     </form>
                 </div>
-                    </form>
-                </div>
 
                 {{-- MINI CTA --}}
-                <div class="contact-mini-cta" data-reveal>
+                <div id="contact-urgent" class="contact-mini-cta" data-reveal>
                     <div class="mini-cta-text">
                         <h3 data-cms-key="contact.mini.title">Besoin urgent ?</h3>
                         <p data-cms-key="contact.mini.desc">

@@ -149,7 +149,7 @@
   ========================================================================== */
   .hero--home{
     height: calc(100vh - 150px);      /* screen minus topbar+navbar */
-    margin-top: 140px;
+    margin-top: 0;
     display:flex;
     align-items:center;
     overflow:hidden;
@@ -158,7 +158,7 @@
 
   #hero-slider { width:100%; position:relative; }
   #hero-slider .hero-track {
-    display:flex; width:600%; height:100%;
+    display:flex; width:100%; height:100%;
     transition: transform .6s cubic-bezier(.22,.61,.36,1);
   }
 
@@ -441,6 +441,72 @@
   .valeur2-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  /* ===================== Nos secteurs d'activites ==================== */
+  .sectors-section {
+    padding: 90px 0;
+    background: #fff;
+  }
+
+  .sectors-head {
+    text-align: center;
+    margin-bottom: 42px;
+  }
+
+  .sectors-head h2 {
+    display: inline-block;
+    color: #00265f;
+    font-size: 34px;
+    font-weight: 900;
+    border-bottom: 3px solid #00265f;
+    margin-bottom: 14px;
+  }
+
+  .sectors-head p {
+    max-width: 760px;
+    margin: 0 auto;
+    color: #5b6472;
+    line-height: 1.7;
+  }
+
+  .sectors-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+  }
+
+  .sector-card {
+    background: #fff;
+    border: 1px solid #edf0f4;
+    border-bottom: 3px solid #00265f;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 12px 26px rgba(0,0,0,.06);
+  }
+
+  .sector-card img {
+    display: block;
+    width: 100%;
+    height: 270px;
+    object-fit: cover;
+  }
+
+  .sector-card div {
+    padding: 22px 24px 26px;
+  }
+
+  .sector-card span {
+    display: block;
+    color: #687385;
+    margin-bottom: 6px;
+    text-transform: lowercase;
+  }
+
+  .sector-card h3 {
+    color: #00265f;
+    font-size: 21px;
+    font-weight: 900;
   }
   
 
@@ -1088,6 +1154,7 @@
   .signature { font-size: 48px; }
   .valeurs2-grid { gap: 30px; }
   .filiales-grid { gap: 28px; }
+  .sectors-grid { gap: 24px; }
 }
 
 /* Mobile menu + hero + grids + stats */
@@ -1113,6 +1180,7 @@
   /* Grids */
   .valeurs2-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
   .filiales-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .sectors-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 
   /* Stats hero */
   .stats-hero-inner { flex-direction: column; gap: 30px; }
@@ -1143,6 +1211,8 @@
 @media (max-width: 600px) {
   .valeurs2-grid { grid-template-columns: 1fr; }
   .filiales-grid { grid-template-columns: 1fr; }
+  .sectors-grid { grid-template-columns: 1fr; }
+  .sector-card img { height: 220px; }
 }
 
 /* Extra small filiales */
@@ -1262,6 +1332,70 @@
 @media (max-width: 420px){
   .logo img{ height: 36px; }
   .nav-center{ left: 10px; right: 10px; top: 74px; }
+}
+
+/* RHS shared motion system for public pages. */
+[data-rhs-animate]{
+  opacity:0;
+  transform:translateY(22px) scale(.985);
+  transition:
+    opacity .65s ease,
+    transform .65s cubic-bezier(.22,.61,.36,1),
+    box-shadow .25s ease,
+    border-color .25s ease;
+  transition-delay:var(--rhs-delay, 0ms);
+}
+
+[data-rhs-animate].is-visible{
+  opacity:1;
+  transform:none;
+}
+
+.rhs-hover-lift{
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.rhs-hover-lift:hover{
+  transform:translateY(-3px);
+}
+
+.rhs-ripple{
+  position:relative;
+  overflow:hidden;
+}
+
+.rhs-ripple::after{
+  content:"";
+  position:absolute;
+  left:var(--ripple-x, 50%);
+  top:var(--ripple-y, 50%);
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.45);
+  transform:translate(-50%, -50%) scale(0);
+  opacity:0;
+  pointer-events:none;
+}
+
+.rhs-ripple.is-rippling::after{
+  animation:rhs-ripple .55s ease-out;
+}
+
+@keyframes rhs-ripple{
+  0%{ opacity:.65; transform:translate(-50%, -50%) scale(0); }
+  100%{ opacity:0; transform:translate(-50%, -50%) scale(28); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  [data-rhs-animate],
+  .rhs-hover-lift,
+  .rhs-ripple::after{
+    transition:none !important;
+    animation:none !important;
+    transform:none !important;
+    opacity:1 !important;
+  }
 }
 
 

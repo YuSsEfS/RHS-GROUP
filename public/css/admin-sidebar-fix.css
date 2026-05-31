@@ -1,0 +1,2207 @@
+    /* =========================================================
+    RHS ADMIN SIDEBAR
+    Clean sidebar-only override loaded after admin.css.
+    ========================================================= */
+
+    html,
+    body.admin-body {
+        overflow-x: hidden !important;
+    }
+
+    body.admin-body {
+        --sidebar-collapsed-width: 84px;
+        --sidebar-expanded-width: 304px;
+
+        --rhs-sidebar-closed: var(--sidebar-collapsed-width);
+        --rhs-sidebar-open: var(--sidebar-expanded-width);
+        --admin-sidebar-collapsed: var(--sidebar-collapsed-width);
+        --admin-sidebar-open: var(--sidebar-expanded-width);
+        --rhs-rail-width: var(--sidebar-collapsed-width);
+        --rhs-sidebar-expanded: var(--sidebar-expanded-width);
+
+        --rhs-red: #ef233c;
+        --rhs-red-dark: #dc1629;
+        --rhs-red-soft: #fff1f2;
+        --rhs-red-border: #fecdd3;
+        --rhs-text: #06142d;
+        --rhs-muted: #64748b;
+        --rhs-soft: #eef3f8;
+        --rhs-border: #dbe5ef;
+        --rhs-white: #ffffff;
+    }
+
+    body.admin-body .admin-sidebar-toggle,
+    body.admin-body [data-admin-sidebar-toggle] {
+        display: none !important;
+    }
+
+    body.admin-body .admin-sidebar,
+    body.admin-body .admin-sidebar *,
+    body.admin-body .admin-sidebar *::before,
+    body.admin-body .admin-sidebar *::after {
+        box-sizing: border-box !important;
+        writing-mode: horizontal-tb !important;
+        text-orientation: mixed !important;
+    }
+
+    body.admin-body .admin-sidebar {
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        z-index: 1200 !important;
+
+        width: var(--sidebar-collapsed-width) !important;
+        min-width: var(--sidebar-collapsed-width) !important;
+        max-width: var(--sidebar-collapsed-width) !important;
+        height: 100vh !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+
+        padding: 18px 10px !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+
+        background: linear-gradient(180deg, #ffffff 0%, #fff7f8 48%, #ffffff 100%) !important;
+        border-right: 1px solid rgba(219, 229, 239, 0.95) !important;
+        box-shadow: 10px 0 32px rgba(15, 23, 42, 0.06) !important;
+        color: var(--rhs-text) !important;
+
+        transition:
+            width 260ms cubic-bezier(.22, 1, .36, 1),
+            min-width 260ms cubic-bezier(.22, 1, .36, 1),
+            max-width 260ms cubic-bezier(.22, 1, .36, 1),
+            padding 260ms cubic-bezier(.22, 1, .36, 1),
+            box-shadow 180ms ease !important;
+    }
+
+    body.admin-body .admin-sidebar:hover,
+    body.admin-body .admin-sidebar:focus-within,
+    body.admin-body .admin-sidebar.is-open {
+        width: var(--sidebar-expanded-width) !important;
+        min-width: var(--sidebar-expanded-width) !important;
+        max-width: var(--sidebar-expanded-width) !important;
+        padding: 18px 14px !important;
+        box-shadow: 18px 0 48px rgba(15, 23, 42, 0.10) !important;
+    }
+
+    body.admin-body .admin-sidebar::-webkit-scrollbar {
+        width: 6px !important;
+    }
+
+    body.admin-body .admin-sidebar::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+
+    body.admin-body .admin-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.55) !important;
+        border-radius: 999px !important;
+    }
+
+    body.admin-body .admin-main,
+    body.admin-body .admin-sidebar + .admin-main,
+    body.admin-body.admin-sidebar-is-collapsed .admin-main {
+        margin-left: var(--sidebar-collapsed-width) !important;
+        width: calc(100vw - var(--sidebar-collapsed-width)) !important;
+        max-width: calc(100vw - var(--sidebar-collapsed-width)) !important;
+        min-width: 0 !important;
+        transition:
+            margin-left 260ms cubic-bezier(.22, 1, .36, 1),
+            width 260ms cubic-bezier(.22, 1, .36, 1),
+            max-width 260ms cubic-bezier(.22, 1, .36, 1) !important;
+    }
+
+    body.admin-body .admin-sidebar:hover + .admin-main,
+    body.admin-body .admin-sidebar:focus-within + .admin-main,
+    body.admin-body .admin-sidebar.is-open + .admin-main {
+        margin-left: var(--sidebar-expanded-width) !important;
+        width: calc(100vw - var(--sidebar-expanded-width)) !important;
+        max-width: calc(100vw - var(--sidebar-expanded-width)) !important;
+    }
+
+    /* Brand */
+body.admin-body .admin-brand {
+    flex: 0 0 auto !important;
+    margin: 0 0 8px !important;
+    padding: 0 !important;
+    width: 58px !important;
+}
+
+    body.admin-body .admin-brand-link {
+        width: 58px !important;
+        height: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+        margin: 0 auto !important;
+        padding: 6px !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 12px !important;
+
+        border: 1px solid rgba(219, 229, 239, 0.95) !important;
+        border-radius: 24px !important;
+        background: rgba(255, 255, 255, 0.90) !important;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05) !important;
+        overflow: hidden !important;
+        text-decoration: none !important;
+    }
+
+body.admin-body .admin-sidebar:hover .admin-brand-link,
+body.admin-body .admin-sidebar:focus-within .admin-brand-link,
+body.admin-body .admin-sidebar.is-open .admin-brand-link {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 68px !important;
+        justify-content: flex-start !important;
+        padding: 8px 12px !important;
+        margin: 0 !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-brand,
+body.admin-body .admin-sidebar:focus-within .admin-brand,
+body.admin-body .admin-sidebar.is-open .admin-brand {
+    width: 100% !important;
+}
+
+body.admin-body .admin-brand-logo,
+body.admin-body .admin-brand-logo-mark {
+        width: 46px !important;
+        height: 46px !important;
+        min-width: 46px !important;
+        flex: 0 0 46px !important;
+
+        display: inline-grid !important;
+        place-items: center !important;
+
+        border-radius: 999px !important;
+    background: #ffffff !important;
+    background-image: url("../images/ChatGPT%20Image%20Jan%2015%2C%202026%2C%2009_50_56%20PM.png") !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+        color: var(--rhs-red) !important;
+        border: 1px solid rgba(219, 229, 239, 0.9) !important;
+        box-shadow: 0 14px 28px rgba(239, 35, 60, 0.10) !important;
+        overflow: hidden !important;
+    }
+
+body.admin-body .admin-brand-logo img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border-radius: inherit !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    mix-blend-mode: normal !important;
+}
+
+    body.admin-body .admin-brand-text {
+        display: block !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        pointer-events: none !important;
+        transition: opacity 160ms ease, max-width 220ms ease !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-brand-text,
+    body.admin-body .admin-sidebar:focus-within .admin-brand-text,
+    body.admin-body .admin-sidebar.is-open .admin-brand-text {
+        max-width: 180px !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    body.admin-body .admin-brand-title {
+        display: block !important;
+        color: var(--rhs-text) !important;
+        font-size: 15px !important;
+        line-height: 1.2 !important;
+        font-weight: 950 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    body.admin-body .admin-brand-sub {
+        display: block !important;
+        margin-top: 2px !important;
+        color: var(--rhs-muted) !important;
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        font-weight: 750 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* Navigation */
+    body.admin-body .admin-nav {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-nav,
+    body.admin-body .admin-sidebar:focus-within .admin-nav,
+    body.admin-body .admin-sidebar.is-open .admin-nav {
+        align-items: stretch !important;
+    }
+
+    body.admin-body .admin-nav > a,
+    body.admin-body .admin-nav > details.sidebar-group > .sidebar-group-toggle {
+        position: relative !important;
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+        min-height: 58px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+
+        border: 1px solid rgba(219, 229, 239, 0.72) !important;
+        border-radius: 24px !important;
+        background: rgba(255, 255, 255, 0.72) !important;
+        color: var(--rhs-text) !important;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.035) !important;
+        overflow: hidden !important;
+        text-decoration: none !important;
+
+        font-size: 14px !important;
+        line-height: 1.2 !important;
+        font-weight: 900 !important;
+        cursor: pointer !important;
+    }
+
+body.admin-body .admin-sidebar:hover .admin-nav > a,
+body.admin-body .admin-sidebar:focus-within .admin-nav > a,
+body.admin-body .admin-sidebar.is-open .admin-nav > a,
+body.admin-body .admin-sidebar:hover .admin-nav > details.sidebar-group > .sidebar-group-toggle,
+body.admin-body .admin-sidebar:focus-within .admin-nav > details.sidebar-group > .sidebar-group-toggle,
+body.admin-body .admin-sidebar.is-open .admin-nav > details.sidebar-group > .sidebar-group-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        min-height: 56px !important;
+        margin: 0 !important;
+        padding: 0 14px !important;
+    }
+
+    body.admin-body .admin-nav > a:hover,
+    body.admin-body .admin-nav > a.is-active,
+    body.admin-body .admin-nav > a.is-hover-active,
+    body.admin-body .admin-nav > details.sidebar-group.is-active > .sidebar-group-toggle,
+    body.admin-body .admin-nav > details.sidebar-group.is-hover-active > .sidebar-group-toggle,
+    body.admin-body .admin-nav > details.sidebar-group[open] > .sidebar-group-toggle {
+        color: var(--rhs-red) !important;
+        background: var(--rhs-red-soft) !important;
+        border-color: rgba(239, 35, 60, 0.22) !important;
+        box-shadow: 0 18px 36px rgba(239, 35, 60, 0.08) !important;
+    }
+
+    body.admin-body .admin-sidebar.has-hover-active .admin-nav > a.is-active:not(.is-hover-active),
+    body.admin-body .admin-sidebar.has-hover-active .admin-nav > details.sidebar-group.is-active:not(.is-hover-active) > .sidebar-group-toggle,
+    body.admin-body .admin-sidebar.has-hover-active .admin-nav > details.sidebar-group[open]:not(.is-hover-active) > .sidebar-group-toggle {
+        color: var(--rhs-text) !important;
+        background: rgba(255, 255, 255, 0.72) !important;
+        border-color: rgba(219, 229, 239, 0.72) !important;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.035) !important;
+    }
+
+    body.admin-body .admin-nav > a.is-active::before,
+    body.admin-body .admin-nav > a.is-hover-active::before,
+    body.admin-body .admin-nav > details.sidebar-group.is-active > .sidebar-group-toggle::before,
+    body.admin-body .admin-nav > details.sidebar-group.is-hover-active > .sidebar-group-toggle::before,
+    body.admin-body .admin-nav > details.sidebar-group[open] > .sidebar-group-toggle::before {
+        content: "" !important;
+        position: absolute !important;
+        left: 7px !important;
+        top: 50% !important;
+        width: 4px !important;
+        height: 28px !important;
+        border-radius: 999px !important;
+        background: var(--rhs-red) !important;
+        transform: translateY(-50%) !important;
+    }
+
+    body.admin-body .admin-sidebar.has-hover-active .admin-nav > a.is-active:not(.is-hover-active)::before,
+    body.admin-body .admin-sidebar.has-hover-active .admin-nav > details.sidebar-group.is-active:not(.is-hover-active) > .sidebar-group-toggle::before,
+    body.admin-body .admin-sidebar.has-hover-active .admin-nav > details.sidebar-group[open]:not(.is-hover-active) > .sidebar-group-toggle::before {
+        display: none !important;
+    }
+
+    body.admin-body details.sidebar-group {
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        display: block !important;
+        position: relative !important;
+        overflow: visible !important;
+    }
+
+    body.admin-body .admin-sidebar:hover details.sidebar-group,
+    body.admin-body .admin-sidebar:focus-within details.sidebar-group,
+    body.admin-body .admin-sidebar.is-open details.sidebar-group {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.admin-body details.sidebar-group > summary {
+        list-style: none !important;
+    }
+
+    body.admin-body details.sidebar-group > summary::-webkit-details-marker {
+        display: none !important;
+    }
+
+body.admin-body .sidebar-group-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    width: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    min-height: 22px !important;
+    overflow: hidden !important;
+    color: inherit !important;
+}
+
+body.admin-body .admin-sidebar:hover .sidebar-group-label,
+body.admin-body .admin-sidebar:focus-within .sidebar-group-label,
+body.admin-body .admin-sidebar.is-open .sidebar-group-label {
+    display: inline-flex !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+}
+
+    body.admin-body .admin-ico {
+        position: static !important;
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        max-width: 22px !important;
+        display: inline-grid !important;
+        place-items: center !important;
+        color: currentColor !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        overflow: visible !important;
+    }
+
+    body.admin-body .admin-ico svg {
+        display: block !important;
+        width: 22px !important;
+        height: 22px !important;
+        color: currentColor !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    body.admin-body .admin-ico svg [stroke] {
+        stroke: currentColor !important;
+    }
+
+body.admin-body .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-nav-label {
+    display: inline-block !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+        width: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        color: inherit !important;
+    }
+
+body.admin-body .admin-sidebar:hover .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-sidebar:focus-within .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-sidebar.is-open .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-sidebar:hover .admin-nav-label,
+body.admin-body .admin-sidebar:focus-within .admin-nav-label,
+body.admin-body .admin-sidebar.is-open .admin-nav-label {
+    display: inline-block !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: inherit !important;
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+    font-weight: 900 !important;
+}
+
+    body.admin-body .admin-sidebar:hover .sidebar-group .admin-nav-label,
+    body.admin-body .admin-sidebar:focus-within .sidebar-group .admin-nav-label,
+    body.admin-body .admin-sidebar.is-open .sidebar-group .admin-nav-label {
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-body .sidebar-group-caret {
+        display: none !important;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        place-items: center !important;
+        color: inherit !important;
+    }
+
+body.admin-body .admin-sidebar:hover .sidebar-group-caret,
+body.admin-body .admin-sidebar:focus-within .sidebar-group-caret,
+body.admin-body .admin-sidebar.is-open .sidebar-group-caret {
+    display: inline-grid !important;
+    margin-left: 0 !important;
+}
+
+    body.admin-body details.sidebar-group[open] .sidebar-group-caret {
+        transform: rotate(90deg) !important;
+    }
+
+    body.admin-body .admin-nav-badge {
+        position: absolute !important;
+        top: 8px !important;
+        right: 3px !important;
+        z-index: 3 !important;
+
+        min-width: 22px !important;
+        height: 22px !important;
+        padding: 0 6px !important;
+        display: inline-grid !important;
+        place-items: center !important;
+
+        border-radius: 999px !important;
+        background: var(--rhs-red) !important;
+        color: #ffffff !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 12px 24px rgba(239, 35, 60, 0.28) !important;
+
+        font-size: 10px !important;
+        line-height: 1 !important;
+        font-weight: 950 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-nav-badge,
+    body.admin-body .admin-sidebar:focus-within .admin-nav-badge,
+    body.admin-body .admin-sidebar.is-open .admin-nav-badge {
+        position: static !important;
+        min-width: 26px !important;
+        height: 24px !important;
+        padding: 0 8px !important;
+        margin-left: auto !important;
+        font-size: 11px !important;
+    }
+
+    /* Submenus: inside sidebar when expanded */
+/* Expanded sidebar inline submenu */
+body.admin-body .admin-sidebar:hover details.sidebar-group[open] > .sidebar-submenu,
+body.admin-body .admin-sidebar:focus-within details.sidebar-group[open] > .sidebar-submenu,
+body.admin-body .admin-sidebar.is-open details.sidebar-group[open] > .sidebar-submenu {
+    position: static !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding-left: 42px !important;
+
+    background: transparent !important;
+    border-left: 1px solid rgba(219,229,239,.9) !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+
+    box-shadow: none !important;
+}
+
+body.admin-body .admin-sidebar:hover details.sidebar-group[open] > .sidebar-submenu,
+body.admin-body .admin-sidebar:focus-within details.sidebar-group[open] > .sidebar-submenu,
+body.admin-body .admin-sidebar.is-open details.sidebar-group[open] > .sidebar-submenu {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+body.admin-body .sidebar-submenu a {
+    width: 100% !important;
+    min-height: 56px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+
+    padding: 0 14px !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.76) !important;
+    color: #c4cbd5 !important;
+    text-decoration: none !important;
+    border: 1px solid rgba(219, 229, 239, 0.75) !important;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.025) !important;
+
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+    font-weight: 900 !important;
+}
+
+body.admin-body .sidebar-submenu a:hover,
+body.admin-body .sidebar-submenu a.is-active,
+body.admin-body .sidebar-submenu a.is-hover-active {
+    background: var(--rhs-red-soft) !important;
+    color: var(--rhs-red) !important;
+    border-color: rgba(239, 35, 60, 0.18) !important;
+}
+
+    body.admin-body .sidebar-submenu a > span:not(.admin-nav-badge) {
+        display: inline-block !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+        color: inherit !important;
+    }
+
+    body.admin-body .sidebar-submenu .admin-nav-badge {
+        position: static !important;
+        min-width: 24px !important;
+        height: 22px !important;
+        padding: 0 7px !important;
+        margin-left: auto !important;
+    }
+
+    /* Optional collapsed flyout fallback if JS marks a submenu outside the sidebar. */
+    body.admin-body > .sidebar-submenu.is-floating {
+        position: fixed !important;
+        left: var(--rhs-submenu-left, calc(var(--sidebar-collapsed-width) + 8px)) !important;
+        top: var(--rhs-submenu-top, 96px) !important;
+        z-index: 1400 !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        width: 260px !important;
+        padding: 12px !important;
+
+        background: #ffffff !important;
+        border: 1px solid var(--rhs-red-border) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 26px 58px rgba(15, 23, 42, 0.16) !important;
+    }
+
+    /* Footer */
+body.admin-body .admin-sidebar-footer {
+    position: relative !important;
+    width: 100% !important;
+        margin-top: auto !important;
+        padding-top: 12px !important;
+        border-top: 1px solid rgba(219, 229, 239, 0.95) !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 8px !important;
+        overflow: visible !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-sidebar-footer,
+    body.admin-body .admin-sidebar:focus-within .admin-sidebar-footer,
+    body.admin-body .admin-sidebar.is-open .admin-sidebar-footer {
+        align-items: stretch !important;
+    }
+
+    body.admin-body .admin-sidebar-card {
+        display: none !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-sidebar-card,
+    body.admin-body .admin-sidebar:focus-within .admin-sidebar-card,
+    body.admin-body .admin-sidebar.is-open .admin-sidebar-card {
+        display: block !important;
+        width: 100% !important;
+        padding: 12px !important;
+        border-radius: 22px !important;
+        background: #eef3f8 !important;
+        color: var(--rhs-text) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        cursor: pointer !important;
+    }
+
+    body.admin-body .admin-sidebar-card-head {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 0 9px !important;
+        color: var(--rhs-red) !important;
+        font-size: 13px !important;
+        line-height: 1.2 !important;
+        font-weight: 950 !important;
+    }
+
+    body.admin-body .admin-sidebar-card-head::before {
+        content: "" !important;
+        width: 18px !important;
+        height: 18px !important;
+        flex: 0 0 18px !important;
+        border: 1.8px solid currentColor !important;
+        border-radius: 5px !important;
+    }
+
+    body.admin-body .admin-copy-box {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 8px !important;
+        align-items: center !important;
+    }
+
+    body.admin-body .admin-copy-input {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 40px !important;
+        padding: 0 12px !important;
+        border-radius: 16px !important;
+        border: 1px solid var(--rhs-border) !important;
+        background: #ffffff !important;
+        color: var(--rhs-text) !important;
+        font-size: 13px !important;
+        font-weight: 750 !important;
+    }
+
+    body.admin-body .admin-copy-box .admin-btn,
+    body.admin-body .admin-sidebar .admin-copy-box .admin-btn {
+        width: auto !important;
+        min-width: 74px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 0 14px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 16px !important;
+        background: var(--rhs-red) !important;
+        color: #ffffff !important;
+        border: 0 !important;
+        font-size: 13px !important;
+        font-weight: 950 !important;
+        box-shadow: 0 12px 24px rgba(239, 35, 60, 0.22) !important;
+    }
+
+    body.admin-body .admin-copy-feedback {
+        margin-top: 6px !important;
+        color: var(--rhs-muted) !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        opacity: 0 !important;
+        transition: opacity 120ms ease !important;
+    }
+
+    body.admin-body .admin-copy-feedback.is-visible {
+        opacity: 1 !important;
+    }
+
+    body.admin-body .admin-sidebar-footer > a.admin-btn,
+    body.admin-body .admin-sidebar-footer form .admin-btn {
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+
+        border-radius: 20px !important;
+        background: #eef3f8 !important;
+        color: #526174 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        text-decoration: none !important;
+        font-size: 0 !important;
+        font-weight: 900 !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-sidebar-footer > a.admin-btn,
+    body.admin-body .admin-sidebar:focus-within .admin-sidebar-footer > a.admin-btn,
+    body.admin-body .admin-sidebar.is-open .admin-sidebar-footer > a.admin-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 44px !important;
+        justify-content: flex-start !important;
+        padding: 0 14px !important;
+        margin: 0 !important;
+        font-size: 13px !important;
+    }
+
+    body.admin-body .admin-sidebar-footer > a.admin-btn:hover {
+        background: #e6edf4 !important;
+        color: var(--rhs-text) !important;
+    }
+
+    body.admin-body .admin-sidebar-footer .admin-btn .admin-ico,
+    body.admin-body .admin-sidebar-footer .admin-btn .admin-ico svg {
+        width: 20px !important;
+        height: 20px !important;
+        min-width: 20px !important;
+    }
+
+    body.admin-body .admin-sidebar-footer form {
+        width: 58px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+    }
+
+body.admin-body .admin-sidebar:hover .admin-sidebar-footer form,
+body.admin-body .admin-sidebar:focus-within .admin-sidebar-footer form,
+body.admin-body .admin-sidebar.is-open .admin-sidebar-footer form {
+    width: auto !important;
+    position: absolute !important;
+    right: 14px !important;
+    bottom: 18px !important;
+        z-index: 3 !important;
+        margin: 0 !important;
+    }
+
+    body.admin-body .admin-sidebar-footer form .admin-btn-danger {
+        background: var(--rhs-red) !important;
+        color: #ffffff !important;
+        box-shadow: 0 12px 24px rgba(239, 35, 60, 0.24) !important;
+    }
+
+body.admin-body .admin-sidebar:hover .admin-sidebar-footer form .admin-btn-danger,
+body.admin-body .admin-sidebar:focus-within .admin-sidebar-footer form .admin-btn-danger,
+body.admin-body .admin-sidebar.is-open .admin-sidebar-footer form .admin-btn-danger {
+    width: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    font-size: 0 !important;
+    box-shadow: 0 16px 34px rgba(239, 35, 60, 0.34) !important;
+}
+
+    body.admin-body .admin-sidebar-footer form .admin-btn-danger span:not(.admin-ico) {
+        display: none !important;
+    }
+
+    body.admin-body .admin-sidebar-footer form .admin-btn-danger:hover {
+        background: var(--rhs-red-dark) !important;
+    }
+
+    body.admin-body .admin-profile {
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+        height: 58px !important;
+        min-height: 58px !important;
+        margin: 0 auto !important;
+        padding: 8px !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+
+        border-radius: 22px !important;
+        background: #eef3f8 !important;
+        color: var(--rhs-text) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        text-decoration: none !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-profile,
+    body.admin-body .admin-sidebar:focus-within .admin-profile,
+    body.admin-body .admin-sidebar.is-open .admin-profile {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 58px !important;
+        justify-content: flex-start !important;
+        margin: 0 !important;
+        padding: 8px 54px 8px 12px !important;
+    }
+
+    body.admin-body .admin-profile-avatar {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        flex: 0 0 42px !important;
+        display: grid !important;
+        place-items: center !important;
+        border-radius: 999px !important;
+        background: var(--rhs-red) !important;
+        color: #ffffff !important;
+        font-size: 13px !important;
+        font-weight: 950 !important;
+        overflow: hidden !important;
+    }
+
+    body.admin-body .admin-profile-avatar img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+
+    body.admin-body .admin-profile-info,
+    body.admin-body .admin-profile-ico {
+        display: none !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-profile-info,
+    body.admin-body .admin-sidebar:focus-within .admin-profile-info,
+    body.admin-body .admin-sidebar.is-open .admin-profile-info {
+        display: block !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
+    }
+
+    body.admin-body .admin-sidebar:hover .admin-profile-ico,
+    body.admin-body .admin-sidebar:focus-within .admin-profile-ico,
+    body.admin-body .admin-sidebar.is-open .admin-profile-ico {
+        display: inline-grid !important;
+        place-items: center !important;
+        min-width: 18px !important;
+        color: #64748b !important;
+    }
+
+    body.admin-body .admin-profile-name,
+    body.admin-body .admin-profile-email {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    body.admin-body .admin-profile-name {
+        color: var(--rhs-text) !important;
+        font-size: 13px !important;
+        line-height: 1.15 !important;
+        font-weight: 950 !important;
+    }
+
+    body.admin-body .admin-profile-email {
+        margin-top: 2px !important;
+        color: var(--rhs-muted) !important;
+        font-size: 11px !important;
+        line-height: 1.2 !important;
+        font-weight: 750 !important;
+    }
+
+    body.admin-body .admin-navbar-actions .admin-nav-badge {
+        position: static !important;
+        margin-left: 8px !important;
+    }
+
+@media (max-width: 760px) {
+    body.admin-body {
+        --sidebar-collapsed-width: 78px;
+        --sidebar-expanded-width: 284px;
+    }
+
+        body.admin-body .admin-main,
+        body.admin-body .admin-sidebar + .admin-main {
+            padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+}
+
+/* =========================================================
+   RESTORE PREVIOUS SIDEBAR LABEL + SUBMENU STYLE
+   Based on the working V7/V8 sidebar CSS.
+========================================================= */
+
+body.admin-body {
+    --rhs-sidebar-closed: var(--sidebar-collapsed-width);
+    --rhs-sidebar-open: var(--sidebar-expanded-width);
+}
+
+body.admin-body .admin-sidebar:hover,
+body.admin-body .admin-sidebar:focus-within,
+body.admin-body .admin-sidebar.is-open,
+body.admin-body .admin-sidebar.is-submenu-hover {
+    width: var(--rhs-sidebar-open) !important;
+    min-width: var(--rhs-sidebar-open) !important;
+    max-width: var(--rhs-sidebar-open) !important;
+}
+
+body.admin-body .admin-sidebar.is-submenu-hover + .admin-main,
+body.admin-body .admin-sidebar.is-submenu-hover ~ .admin-main {
+    margin-left: var(--rhs-sidebar-open) !important;
+    width: calc(100vw - var(--rhs-sidebar-open)) !important;
+    max-width: calc(100vw - var(--rhs-sidebar-open)) !important;
+}
+
+body.admin-body .admin-nav > a,
+body.admin-body .admin-nav > details.sidebar-group > .sidebar-group-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    max-height: 58px !important;
+    border-radius: 20px !important;
+    overflow: visible !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-nav > a,
+body.admin-body .admin-sidebar:focus-within .admin-nav > a,
+body.admin-body .admin-sidebar.is-open .admin-nav > a,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-nav > a,
+body.admin-body .admin-sidebar:hover .admin-nav > details.sidebar-group > .sidebar-group-toggle,
+body.admin-body .admin-sidebar:focus-within .admin-nav > details.sidebar-group > .sidebar-group-toggle,
+body.admin-body .admin-sidebar.is-open .admin-nav > details.sidebar-group > .sidebar-group-toggle,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-nav > details.sidebar-group > .sidebar-group-toggle {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 0 14px !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+}
+
+body.admin-body .sidebar-group-label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: visible !important;
+}
+
+body.admin-body .admin-sidebar:hover .sidebar-group-label,
+body.admin-body .admin-sidebar:focus-within .sidebar-group-label,
+body.admin-body .admin-sidebar.is-open .sidebar-group-label,
+body.admin-body .admin-sidebar.is-submenu-hover .sidebar-group-label {
+    display: flex !important;
+    justify-content: flex-start !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    gap: 12px !important;
+    overflow: hidden !important;
+}
+
+body.admin-body .admin-ico,
+body.admin-body .admin-ico svg,
+body.admin-body .sidebar-group-toggle .admin-ico,
+body.admin-body .sidebar-group-toggle .admin-ico svg {
+    display: inline-flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+    flex: 0 0 22px !important;
+    color: currentColor !important;
+    transform: none !important;
+    clip-path: none !important;
+    clip: auto !important;
+}
+
+body.admin-body .admin-ico svg,
+body.admin-body .sidebar-group-toggle .admin-ico svg {
+    display: block !important;
+    fill: none !important;
+    stroke: currentColor !important;
+}
+
+body.admin-body .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-nav-label {
+    display: block !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateX(-8px) !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    color: inherit !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-sidebar:focus-within .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-sidebar.is-open .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-sidebar.is-submenu-hover .admin-nav > a > span:not(.admin-ico):not(.admin-nav-badge),
+body.admin-body .admin-sidebar:hover .admin-nav-label,
+body.admin-body .admin-sidebar:focus-within .admin-nav-label,
+body.admin-body .admin-sidebar.is-open .admin-nav-label,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-nav-label {
+    display: block !important;
+    width: auto !important;
+    max-width: 170px !important;
+    flex: 1 1 auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(0) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+body.admin-body .admin-sidebar:hover .sidebar-group:nth-of-type(3) .admin-nav-label,
+body.admin-body .admin-sidebar:focus-within .sidebar-group:nth-of-type(3) .admin-nav-label,
+body.admin-body .admin-sidebar.is-open .sidebar-group:nth-of-type(3) .admin-nav-label,
+body.admin-body .admin-sidebar.is-submenu-hover .sidebar-group:nth-of-type(3) .admin-nav-label {
+    font-size: 12px !important;
+    max-width: 170px !important;
+}
+
+body.admin-body .sidebar-group-caret {
+    display: none !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    flex: 0 0 18px !important;
+    margin-left: auto !important;
+    color: currentColor !important;
+}
+
+body.admin-body .admin-sidebar:hover .sidebar-group-caret,
+body.admin-body .admin-sidebar:focus-within .sidebar-group-caret,
+body.admin-body .admin-sidebar.is-open .sidebar-group-caret,
+body.admin-body .admin-sidebar.is-submenu-hover .sidebar-group-caret {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body.admin-body details.sidebar-group[open] .sidebar-group-caret {
+    transform: rotate(90deg) !important;
+}
+
+body.admin-body .admin-sidebar .admin-nav details.sidebar-group > .sidebar-submenu,
+body.admin-body .admin-sidebar .admin-nav details.sidebar-group[open] > .sidebar-submenu,
+body.admin-body .admin-sidebar .sidebar-submenu:not(.is-floating) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: 100% !important;
+    top: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+}
+
+body.admin-body .sidebar-submenu.is-floating {
+    position: fixed !important;
+    left: var(--rhs-submenu-left, 298px) !important;
+    top: var(--rhs-submenu-top, 120px) !important;
+    z-index: 2400 !important;
+    width: var(--rhs-submenu-width, 268px) !important;
+    min-width: var(--rhs-submenu-width, 268px) !important;
+    max-width: var(--rhs-submenu-width, 268px) !important;
+    max-height: min(420px, calc(100vh - 24px)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    background: #ffffff !important;
+    color: var(--rhs-text) !important;
+    border: 1px solid rgba(239, 35, 60, 0.18) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16), 0 14px 34px rgba(239, 35, 60, 0.08) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+body.admin-body .sidebar-submenu.is-floating::before {
+    content: "" !important;
+    position: absolute !important;
+    left: -7px !important;
+    top: 22px !important;
+    width: 13px !important;
+    height: 13px !important;
+    background: #ffffff !important;
+    transform: rotate(45deg) !important;
+    border-left: 1px solid rgba(239, 35, 60, 0.18) !important;
+    border-bottom: 1px solid rgba(239, 35, 60, 0.18) !important;
+}
+
+body.admin-body .sidebar-submenu.is-floating a {
+    width: 100% !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    border-radius: 13px !important;
+    background: transparent !important;
+    color: #526174 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+    font-weight: 850 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+}
+
+body.admin-body .sidebar-submenu.is-floating a:hover,
+body.admin-body .sidebar-submenu.is-floating a.is-active,
+body.admin-body .sidebar-submenu.is-floating a.is-hover-active {
+    background: var(--rhs-red-soft) !important;
+    color: var(--rhs-red) !important;
+}
+
+body.admin-body .sidebar-submenu.is-floating a > span:not(.admin-nav-badge) {
+    display: inline-block !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+body.admin-body .sidebar-submenu.is-floating .admin-nav-badge {
+    position: static !important;
+    width: auto !important;
+    min-width: 22px !important;
+    max-width: none !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    padding: 0 7px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--rhs-red) !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    font-weight: 950 !important;
+    box-shadow: 0 10px 22px rgba(239, 35, 60, 0.22) !important;
+}
+
+
+/* =========================================================
+   RHS SIDEBAR UX PATCH
+   - Profile card contains logout button cleanly
+   - Removes profile chevron visual
+   - Copy card works without a separate copy button
+   - Smoother footer/profile behavior
+========================================================= */
+
+/* Copy card: whole box copies, no button needed */
+body.admin-body .admin-sidebar-card {
+    user-select: none !important;
+}
+
+body.admin-body .admin-sidebar-card:hover {
+    background: #e9f0f7 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+body.admin-body .admin-copy-box {
+    display: block !important;
+}
+
+body.admin-body .admin-copy-box .admin-btn,
+body.admin-body .admin-sidebar .admin-copy-box .admin-btn,
+body.admin-body .admin-copy-box button {
+    display: none !important;
+}
+
+body.admin-body .admin-copy-input {
+    pointer-events: none !important;
+    cursor: pointer !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Footer profile wrapper */
+body.admin-body .admin-profile-wrapper {
+    position: relative !important;
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Profile card: remove the old > icon and reserve space for logout */
+body.admin-body .admin-profile {
+    position: relative !important;
+}
+
+body.admin-body .admin-profile-ico,
+body.admin-body .admin-profile::after,
+body.admin-body .admin-profile [data-profile-chevron],
+body.admin-body .admin-profile .profile-chevron {
+    display: none !important;
+    content: none !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-profile,
+body.admin-body .admin-sidebar:focus-within .admin-profile,
+body.admin-body .admin-sidebar.is-open .admin-profile,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile {
+    padding-right: 62px !important;
+}
+
+/* Logout form becomes an integrated round action inside the profile card */
+body.admin-body .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-profile-wrapper form.admin-logout-form,
+body.admin-body .admin-profile-wrapper .rhsx-logout-form {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 42px !important;
+    height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 5 !important;
+    display: none !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper form.admin-logout-form,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper form.admin-logout-form,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper form.admin-logout-form,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper form.admin-logout-form,
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper .rhsx-logout-form,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper .rhsx-logout-form,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper .rhsx-logout-form,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper .rhsx-logout-form {
+    display: block !important;
+}
+
+/* collapsed state: keep only avatar visible, avoid weird red detached logout */
+body.admin-body .admin-profile-wrapper .admin-logout-btn,
+body.admin-body .admin-profile-wrapper .admin-btn-danger,
+body.admin-body .admin-profile-wrapper button[type="submit"] {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    background: linear-gradient(135deg, var(--rhs-red), var(--rhs-red-dark)) !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+    box-shadow: 0 14px 28px rgba(239, 35, 60, 0.28) !important;
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        background 160ms ease !important;
+}
+
+body.admin-body .admin-profile-wrapper .admin-logout-btn:hover,
+body.admin-body .admin-profile-wrapper .admin-btn-danger:hover,
+body.admin-body .admin-profile-wrapper button[type="submit"]:hover {
+    transform: translateY(-1px) scale(1.03) !important;
+    box-shadow: 0 18px 36px rgba(239, 35, 60, 0.36) !important;
+}
+
+body.admin-body .admin-profile-wrapper .admin-logout-btn svg,
+body.admin-body .admin-profile-wrapper .admin-btn-danger svg,
+body.admin-body .admin-profile-wrapper button[type="submit"] svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke: currentColor !important;
+}
+
+/* Smooth submenu floating panel */
+body.admin-body .sidebar-submenu.is-floating {
+    animation: rhsSidebarMenuIn 170ms cubic-bezier(.22, 1, .36, 1) both !important;
+    will-change: transform, opacity !important;
+}
+
+@keyframes rhsSidebarMenuIn {
+    from {
+        opacity: 0;
+        transform: translateX(-6px) scale(.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+/* Reduce motion support */
+@media (prefers-reduced-motion: reduce) {
+    body.admin-body .admin-sidebar,
+    body.admin-body .admin-sidebar *,
+    body.admin-body .sidebar-submenu.is-floating {
+        transition-duration: 1ms !important;
+        animation-duration: 1ms !important;
+    }
+}
+
+/* =========================================================
+   RHS SIDEBAR FINAL PATCH
+   Fixes:
+   1) logout button integrated inside profile card
+   2) removes profile chevron
+   3) restores admin navbar layout after admin.css cleanup
+   Put this at the VERY END of admin-sidebar-fix.css
+========================================================= */
+
+/* ---------- Restore top navbar layout ---------- */
+body.admin-body .admin-main {
+    padding: 32px 40px 56px !important;
+}
+
+body.admin-body .admin-navbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    margin-bottom: 28px !important;
+    width: 100% !important;
+}
+
+body.admin-body .admin-global-search {
+    flex: 1 1 auto !important;
+    max-width: 760px !important;
+    min-width: 280px !important;
+}
+
+body.admin-body .admin-global-search form {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+body.admin-body #admin-global-search-input,
+body.admin-body .admin-global-search input {
+    width: 100% !important;
+    min-height: 56px !important;
+    border-radius: 22px !important;
+    border: 1px solid rgba(203, 213, 225, .95) !important;
+    background: rgba(255, 255, 255, .92) !important;
+    padding: 0 18px !important;
+    color: var(--rhs-text) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .045) !important;
+}
+
+body.admin-body .admin-navbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+}
+
+body.admin-body .admin-navbar-actions .btn,
+body.admin-body .admin-navbar-actions .btn-ghost {
+    min-height: 52px !important;
+    padding: 0 22px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, .92) !important;
+    color: var(--rhs-text) !important;
+    border: 1px solid rgba(203, 213, 225, .95) !important;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, .045) !important;
+    font-weight: 950 !important;
+    text-decoration: none !important;
+}
+
+body.admin-body .admin-navbar-actions .btn:hover,
+body.admin-body .admin-navbar-actions .btn-ghost:hover {
+    background: var(--rhs-red-soft) !important;
+    border-color: rgba(239, 35, 60, .22) !important;
+    color: var(--rhs-red) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ---------- Copy card: remove separate copy button ---------- */
+body.admin-body .admin-sidebar-card {
+    cursor: pointer !important;
+}
+
+body.admin-body .admin-copy-box {
+    display: block !important;
+}
+
+body.admin-body .admin-copy-box .admin-btn,
+body.admin-body .admin-copy-box button,
+body.admin-body .admin-copy-box [type="button"] {
+    display: none !important;
+}
+
+body.admin-body .admin-copy-input {
+    pointer-events: none !important;
+    cursor: pointer !important;
+    width: 100% !important;
+}
+
+/* ---------- Profile + logout combined card ---------- */
+body.admin-body .admin-profile-wrapper {
+    position: relative !important;
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Remove old profile chevron / > */
+body.admin-body .admin-profile-ico,
+body.admin-body .admin-profile::after,
+body.admin-body .admin-profile [data-profile-chevron],
+body.admin-body .admin-profile .profile-chevron {
+    display: none !important;
+    content: none !important;
+}
+
+/* Profile card expanded with space for logout */
+body.admin-body .admin-sidebar:hover .admin-profile,
+body.admin-body .admin-sidebar:focus-within .admin-profile,
+body.admin-body .admin-sidebar.is-open .admin-profile,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile {
+    position: relative !important;
+    padding: 8px 62px 8px 12px !important;
+    min-height: 58px !important;
+}
+
+/* Override old rule that placed form at bottom/right */
+body.admin-body .admin-sidebar-footer .admin-profile-wrapper form,
+body.admin-body .admin-sidebar-footer .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar-footer .admin-profile-wrapper .rhsx-logout-form {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    width: 42px !important;
+    height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 10 !important;
+    display: none !important;
+}
+
+/* Only show logout when sidebar is expanded/open */
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper form,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper form,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper form,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper form,
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper .rhsx-logout-form,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper .rhsx-logout-form,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper .rhsx-logout-form,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper .rhsx-logout-form {
+    display: block !important;
+}
+
+/* Logout button style */
+body.admin-body .admin-profile-wrapper form button,
+body.admin-body .admin-profile-wrapper .admin-logout-btn,
+body.admin-body .admin-profile-wrapper .admin-btn-danger,
+body.admin-body .admin-profile-wrapper button[type="submit"] {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+
+    display: inline-grid !important;
+    place-items: center !important;
+
+    background: linear-gradient(135deg, #ff3854, #ef233c) !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+
+    box-shadow:
+        0 16px 34px rgba(239, 35, 60, .34),
+        inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        background 160ms ease !important;
+}
+
+body.admin-body .admin-profile-wrapper form button:hover,
+body.admin-body .admin-profile-wrapper .admin-logout-btn:hover,
+body.admin-body .admin-profile-wrapper .admin-btn-danger:hover,
+body.admin-body .admin-profile-wrapper button[type="submit"]:hover {
+    transform: translateY(-1px) scale(1.04) !important;
+    background: linear-gradient(135deg, #ef233c, #dc1629) !important;
+    box-shadow:
+        0 20px 42px rgba(239, 35, 60, .42),
+        inset 0 1px 0 rgba(255, 255, 255, .30) !important;
+}
+
+body.admin-body .admin-profile-wrapper form button svg,
+body.admin-body .admin-profile-wrapper .admin-logout-btn svg,
+body.admin-body .admin-profile-wrapper .admin-btn-danger svg,
+body.admin-body .admin-profile-wrapper button[type="submit"] svg {
+    width: 20px !important;
+    height: 20px !important;
+    display: block !important;
+    stroke: currentColor !important;
+}
+
+/* Hide any text inside logout button */
+body.admin-body .admin-profile-wrapper form button span:not(.admin-ico),
+body.admin-body .admin-profile-wrapper .admin-logout-btn span:not(.admin-ico),
+body.admin-body .admin-profile-wrapper .admin-btn-danger span:not(.admin-ico) {
+    display: none !important;
+}
+
+/* collapsed footer old form protection */
+body.admin-body .admin-sidebar-footer > form:not(.admin-logout-form):not(.rhsx-logout-form) {
+    display: none !important;
+}
+
+/* ---------- Mobile/top responsive ---------- */
+@media (max-width: 900px) {
+    body.admin-body .admin-navbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    body.admin-body .admin-global-search {
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    body.admin-body .admin-navbar-actions {
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+}
+/* =========================================================
+   PROFILE / LOGOUT FIX
+   Add this at the VERY END of your CURRENT WORKING CSS
+========================================================= */
+
+/* remove the old > chevron */
+body.admin-body .admin-profile-ico,
+body.admin-body .admin-profile::after,
+body.admin-body .admin-profile .profile-chevron,
+body.admin-body .admin-profile [data-profile-chevron]{
+    display:none !important;
+    content:none !important;
+}
+
+/* profile wrapper */
+body.admin-body .admin-profile-wrapper{
+    position:relative !important;
+}
+
+/* keep profile card clean */
+body.admin-body .admin-profile{
+    position:relative !important;
+    overflow:hidden !important;
+}
+
+/* expanded sidebar profile */
+body.admin-body .admin-sidebar:hover .admin-profile,
+body.admin-body .admin-sidebar:focus-within .admin-profile,
+body.admin-body .admin-sidebar.is-open .admin-profile,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile{
+    padding-right:54px !important;
+}
+
+/* logout form position */
+body.admin-body .admin-profile-wrapper form,
+body.admin-body .admin-profile-wrapper .admin-logout-form,
+body.admin-body .admin-profile-wrapper .rhsx-logout-form{
+    position:absolute !important;
+    top:50% !important;
+    right:10px !important;
+    transform:translateY(-50%) !important;
+
+    width:34px !important;
+    height:34px !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    z-index:20 !important;
+}
+
+/* logout button */
+body.admin-body .admin-profile-wrapper form button,
+body.admin-body .admin-profile-wrapper .admin-logout-btn,
+body.admin-body .admin-profile-wrapper .admin-btn-danger,
+body.admin-body .admin-profile-wrapper button[type="submit"]{
+
+    width:34px !important;
+    height:34px !important;
+
+    border:none !important;
+    border-radius:999px !important;
+
+    background:transparent !important;
+    color:#64748b !important;
+
+    display:grid !important;
+    place-items:center !important;
+
+    padding:0 !important;
+    margin:0 !important;
+
+    box-shadow:none !important;
+
+    transition:
+        background .16s ease,
+        color .16s ease,
+        transform .16s ease !important;
+}
+
+/* hover */
+body.admin-body .admin-profile-wrapper form button:hover,
+body.admin-body .admin-profile-wrapper .admin-logout-btn:hover,
+body.admin-body .admin-profile-wrapper .admin-btn-danger:hover,
+body.admin-body .admin-profile-wrapper button[type="submit"]:hover{
+
+    background:#fff1f2 !important;
+    color:#ef233c !important;
+    transform:translateX(1px) !important;
+}
+
+/* icon */
+body.admin-body .admin-profile-wrapper form button svg,
+body.admin-body .admin-profile-wrapper .admin-logout-btn svg,
+body.admin-body .admin-profile-wrapper .admin-btn-danger svg,
+body.admin-body .admin-profile-wrapper button[type="submit"] svg{
+
+    width:18px !important;
+    height:18px !important;
+    stroke:currentColor !important;
+}
+
+/* hide logout text */
+body.admin-body .admin-profile-wrapper form button span:not(.admin-ico),
+body.admin-body .admin-profile-wrapper .admin-btn-danger span:not(.admin-ico),
+body.admin-body .admin-profile-wrapper .admin-logout-btn span:not(.admin-ico){
+    display:none !important;
+}
+
+/* collapsed sidebar => hide logout */
+body.admin-body .admin-sidebar:not(:hover):not(.is-open):not(.is-submenu-hover)
+.admin-profile-wrapper form{
+    display:none !important;
+}
+/* CLOSED SIDEBAR LOGO FIX */
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-brand {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    margin: 0 auto !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-brand-link {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 0 !important;
+    margin: 0 auto !important;
+    gap: 0 !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-brand-logo,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-brand-logo-mark {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 !important;
+}
+/* CLOSED SIDEBAR ICON CENTER FIX */
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > a,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > details.sidebar-group > .sidebar-group-toggle,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-sidebar-footer > a.admin-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    gap: 0 !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-ico {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    flex: 0 0 22px !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-ico svg {
+    display: block !important;
+    width: 22px !important;
+    height: 22px !important;
+    margin: 0 !important;
+}
+/* CLOSED RHSX SIDEBAR ICON + LOGO CENTERING */
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-brand,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-group,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-profile-wrapper {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-brand-link,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-nav > a,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-group-toggle,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-footer-link,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-profile {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 0 !important;
+    overflow: hidden !important;
+}
+
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-brand-logo,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-avatar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+}
+
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-label,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-brand-text,
+body.admin-body .rhsx-sidebar:not(:hover):not(:focus-within):not(.is-open) .rhsx-profile-info {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Requested sidebar/navbar polish */
+body.admin-body .admin-navbar {
+    align-items: center !important;
+}
+
+body.admin-body .admin-global-search {
+    flex: 1 1 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
+
+body.admin-body .admin-navbar-actions {
+    flex: 0 0 auto !important;
+}
+
+body.admin-body .admin-profile-wrapper {
+    isolation: isolate !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-profile,
+body.admin-body .admin-sidebar:focus-within .admin-profile,
+body.admin-body .admin-sidebar.is-open .admin-profile,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile {
+    background: #eef3f8 !important;
+    border-color: transparent !important;
+    border-radius: 999px !important;
+    min-height: 58px !important;
+    padding: 8px 48px 8px 8px !important;
+    box-shadow: none !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-profile-avatar,
+body.admin-body .admin-sidebar:focus-within .admin-profile-avatar,
+body.admin-body .admin-sidebar.is-open .admin-profile-avatar,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-avatar {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    flex-basis: 42px !important;
+    background: var(--rhs-red) !important;
+    color: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body.admin-body .admin-sidebar:hover .admin-profile-wrapper form,
+body.admin-body .admin-sidebar:focus-within .admin-profile-wrapper form,
+body.admin-body .admin-sidebar.is-open .admin-profile-wrapper form,
+body.admin-body .admin-sidebar.is-submenu-hover .admin-profile-wrapper form {
+    display: block !important;
+    right: 12px !important;
+}
+
+body.admin-body .admin-profile-wrapper form button,
+body.admin-body .admin-profile-wrapper .admin-logout-btn,
+body.admin-body .admin-profile-wrapper .admin-btn-danger,
+body.admin-body .admin-profile-wrapper button[type="submit"] {
+    background: transparent !important;
+    color: #64748b !important;
+    box-shadow: none !important;
+}
+
+body.admin-body .admin-profile-wrapper form button:hover,
+body.admin-body .admin-profile-wrapper .admin-logout-btn:hover,
+body.admin-body .admin-profile-wrapper .admin-btn-danger:hover,
+body.admin-body .admin-profile-wrapper button[type="submit"]:hover {
+    background: rgba(255, 255, 255, .74) !important;
+    color: var(--rhs-red) !important;
+    transform: translateX(1px) !important;
+    box-shadow: none !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .sidebar-group-label {
+    width: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    flex: 0 0 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .sidebar-group-label .admin-ico {
+    margin: 0 !important;
+    transform: none !important;
+}
+
+/* Dense pages: keep content stable and make sidebar hover cheap. */
+body.admin-body.admin-perf-mode .admin-sidebar {
+    transition:
+        width 120ms ease,
+        min-width 120ms ease,
+        max-width 120ms ease,
+        padding 120ms ease !important;
+    box-shadow: 8px 0 22px rgba(15, 23, 42, .055) !important;
+    will-change: width !important;
+}
+
+body.admin-body.admin-perf-mode .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar + .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar:hover + .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar:focus-within + .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar.is-open + .admin-main {
+    margin-left: var(--sidebar-collapsed-width) !important;
+    width: calc(100vw - var(--sidebar-collapsed-width)) !important;
+    max-width: calc(100vw - var(--sidebar-collapsed-width)) !important;
+    transition: none !important;
+}
+
+body.admin-body.admin-perf-mode .admin-sidebar:hover,
+body.admin-body.admin-perf-mode .admin-sidebar:focus-within,
+body.admin-body.admin-perf-mode .admin-sidebar.is-open {
+    box-shadow: 14px 0 34px rgba(15, 23, 42, .08) !important;
+}
+
+body.admin-body.admin-perf-mode .admin-content *,
+body.admin-body.admin-perf-mode .admin-main table tbody tr,
+body.admin-body.admin-perf-mode .panel,
+body.admin-body.admin-perf-mode .table,
+body.admin-body.admin-perf-mode .btn {
+    transition-duration: 0ms !important;
+}
+
+body.admin-body.admin-perf-mode .rhs-hover-lift:hover,
+body.admin-body.admin-perf-mode .panel:hover,
+body.admin-body.admin-perf-mode .table tbody tr:hover {
+    transform: none !important;
+}
+
+/* Final admin sidebar polish: centered collapsed icons, badges, and profile footer. */
+body.admin-body .admin-nav-badge {
+    display: inline-grid !important;
+    place-items: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+}
+
+body.admin-body .admin-profile-ico,
+body.admin-body .admin-profile::after,
+body.admin-body .admin-profile [data-profile-chevron],
+body.admin-body .admin-profile .profile-chevron {
+    display: none !important;
+    content: none !important;
+}
+
+body.admin-body .admin-profile-wrapper form button,
+body.admin-body .admin-profile-wrapper .admin-logout-btn,
+body.admin-body .admin-profile-wrapper .admin-btn-danger,
+body.admin-body .admin-profile-wrapper button[type="submit"] {
+    background: #eef3f8 !important;
+    color: var(--rhs-red) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body.admin-body .admin-profile-wrapper form button:hover,
+body.admin-body .admin-profile-wrapper .admin-logout-btn:hover,
+body.admin-body .admin-profile-wrapper .admin-btn-danger:hover,
+body.admin-body .admin-profile-wrapper button[type="submit"]:hover {
+    background: #e6edf5 !important;
+    color: var(--rhs-red) !important;
+    transform: none !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > a,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > details.sidebar-group > .sidebar-group-toggle,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-sidebar-footer > a.admin-btn {
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    justify-items: center !important;
+    align-items: center !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > a > .admin-ico,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > details.sidebar-group > .sidebar-group-toggle .admin-ico,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-sidebar-footer > a.admin-btn > .admin-ico {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .sidebar-group-label {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav-label,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .sidebar-group-caret {
+    display: none !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > a > .admin-nav-badge,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > details.sidebar-group > .sidebar-group-toggle > .admin-nav-badge {
+    position: absolute !important;
+    top: 10px !important;
+    right: 3px !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    padding: 0 6px !important;
+    display: grid !important;
+    place-items: center !important;
+    line-height: 1 !important;
+    font-size: 10px !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-profile-wrapper,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-profile {
+    display: grid !important;
+    place-items: center !important;
+}
+
+body.admin-body .admin-profile-avatar {
+    display: grid !important;
+    place-items: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+}
+
+/* Keep sidebar notification counts optically centered in every sidebar state. */
+body.admin-body .admin-nav-badge,
+body.admin-body .sidebar-submenu .admin-nav-badge,
+body.admin-body .sidebar-submenu.is-floating .admin-nav-badge {
+    box-sizing: border-box !important;
+    min-width: 24px !important;
+    height: 24px !important;
+    padding: 0 7px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    font-weight: 950 !important;
+    line-height: 24px !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+}
+
+body.admin-body .admin-nav-badge {
+    min-width: 26px !important;
+}
+
+body.admin-body .admin-nav-badge:is(:not(:empty)) {
+    font-variant-numeric: tabular-nums !important;
+}
+
+body.admin-body .sidebar-submenu .admin-nav-badge {
+    min-width: 28px !important;
+    height: 24px !important;
+    line-height: 24px !important;
+    margin-left: auto !important;
+}
+
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > a > .admin-nav-badge,
+body.admin-body .admin-sidebar:not(:hover):not(:focus-within):not(.is-open):not(.is-submenu-hover) .admin-nav > details.sidebar-group > .sidebar-group-toggle > .admin-nav-badge {
+    top: 10px !important;
+    right: 3px !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    padding: 0 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+
+body.admin-body .admin-profile-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+}
+
+/* Keep dense admin pages consistent with the rest of the dashboard. */
+body.admin-body.admin-perf-mode .admin-sidebar:hover + .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar:focus-within + .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar.is-open + .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar.is-submenu-hover + .admin-main,
+body.admin-body.admin-perf-mode .admin-sidebar.is-submenu-hover ~ .admin-main {
+    margin-left: var(--sidebar-expanded-width) !important;
+    width: calc(100vw - var(--sidebar-expanded-width)) !important;
+    max-width: calc(100vw - var(--sidebar-expanded-width)) !important;
+    transition:
+        margin-left 260ms cubic-bezier(.22, 1, .36, 1),
+        width 260ms cubic-bezier(.22, 1, .36, 1),
+        max-width 260ms cubic-bezier(.22, 1, .36, 1) !important;
+}

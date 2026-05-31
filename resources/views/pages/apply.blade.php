@@ -183,6 +183,19 @@
         </div>
     </section>
 
+    <section class="apply-cndp-section">
+        <div class="container apply-cndp-card">
+            <img src="{{ asset('images/cndp-logo.png') }}" alt="CNDP" class="apply-cndp-logo">
+            <p data-cms-key="apply.cndp.notice">
+                Les informations saisies dans ce formulaire sont utilisées et collectées pour la finalité de traitement
+                de votre candidature. Elles sont traitées par RHS GROUP et ne seront utilisées qu'à cette fin.
+                Conformément à la loi 09-08, vous disposez d'un droit d'accès, de rectification et d'opposition en nous
+                contactant à : contact@rhsgroup.ma. Ce traitement a fait l'objet d'une autorisation auprès de la CNDP
+                sous le numéro A-RH-2131/2025.
+            </p>
+        </div>
+    </section>
+
 </div>
 <script>
     document.querySelectorAll('.file-upload-label input[type="file"]').forEach(input => {

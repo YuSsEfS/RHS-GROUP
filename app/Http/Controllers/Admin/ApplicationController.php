@@ -17,7 +17,8 @@ class ApplicationController extends Controller
         $offer  = (string) $request->query('offer', 'all');  // all|spontaneous|{id}
 
         $applications = JobApplication::query()
-            ->with(['offer'])
+            ->select('id', 'job_offer_id', 'full_name', 'email', 'phone', 'city', 'is_read', 'created_at')
+            ->with(['offer:id,title'])
 
             // ✅ search by candidate name OR email OR city
             ->when($q !== '', function ($query) use ($q) {
@@ -42,12 +43,8 @@ class ApplicationController extends Controller
             })
 
             ->latest()
-->get();
-
-        JobApplication::query()
-            ->whereNull('admin_seen_at')
-            ->update(['admin_seen_at' => now()]);
-
+            ->simplePaginate(30)
+            ->withQueryString();
 
         $offers = JobOffer::query()
             ->select('id', 'title')
@@ -98,8 +95,9 @@ class ApplicationController extends Controller
     {
         $application = JobApplication::with(['offer'])->findOrFail($id);
 
-        if (is_null($application->admin_seen_at)) {
+        if (!$application->is_read || is_null($application->admin_seen_at)) {
             $application->forceFill([
+                'is_read' => true,
                 'admin_seen_at' => now(),
             ])->save();
         }

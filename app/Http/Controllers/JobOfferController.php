@@ -29,7 +29,7 @@ class JobOfferController extends Controller
         ->when($sector !== '', fn ($query) => $query->where('sector', $sector))
         ->when($sort === 'old', fn ($query) => $query->orderBy('published_at', 'asc'))
         ->when($sort !== 'old', fn ($query) => $query->orderBy('published_at', 'desc'))
-        ->paginate(10)
+        ->paginate(9)
         ->appends($request->query());
 
     // dropdown options
@@ -48,7 +48,15 @@ class JobOfferController extends Controller
         ->whereNotNull('sector')->where('sector','!=','')
         ->distinct()->orderBy('sector')->pluck('sector');
 
-    return view('pages.jobs', compact('offers', 'locations', 'contracts', 'sectors'));
+    $selectedOffer = null;
+
+    if ($request->filled('offer')) {
+        $selectedOffer = JobOffer::query()
+            ->where('is_active', true)
+            ->find($request->query('offer'));
+    }
+
+    return view('pages.jobs', compact('offers', 'locations', 'contracts', 'sectors', 'selectedOffer'));
 }
 
     public function show(string $slug)
@@ -57,7 +65,7 @@ class JobOfferController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        return view('pages.job-detail', compact('offer'));
+        return redirect(route('jobs', ['offer' => $offer->id]) . '#jobs-list');
     }
     public function suggest(Request $request)
 {
@@ -68,7 +76,7 @@ class JobOfferController extends Controller
     }
 
     $items = JobOffer::query()
-        ->select('title', 'slug', 'location', 'contract_type')
+        ->select('id', 'title', 'slug', 'location', 'contract_type')
         ->where('is_active', true)
         ->where('title', 'like', "%{$q}%")
         ->orderByRaw("CASE WHEN title LIKE ? THEN 0 ELSE 1 END, title ASC", ["{$q}%"])
@@ -79,6 +87,7 @@ class JobOfferController extends Controller
 
             return [
                 'title' => $o->title,
+                'id'    => $o->id,
                 'slug'  => $o->slug,
                 'meta'  => implode(' • ', $metaParts),
             ];

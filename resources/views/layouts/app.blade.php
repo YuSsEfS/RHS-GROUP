@@ -10,19 +10,22 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800|dm-serif-display:400&display=swap" rel="stylesheet" />
 
     <!-- ✅ Vite (Tailwind / Breeze) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="icon" href="{{ asset('images/rhs-logo.png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('images/rhs-group-logo.png') }}" type="image/png">
 
     <!-- ✅ Website CSS -->
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/home-modern.css') }}">
 
     <!-- ✅ Page-specific CSS should be LAST (so it overrides Tailwind + other files) -->
     @stack('styles')
     <link rel="stylesheet" href="{{ asset('css/apply.css') }}">
     <link rel="stylesheet" href="{{ asset('css/about.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/visitor-modern.css') }}">
 
 </head>
 
@@ -61,5 +64,6 @@
     @endif
 
     <script src="{{ asset('js/navbar.js') }}"></script>
+    <script src="{{ asset('js/rhs-ui.js') }}" defer></script>
 </body>
 </html>

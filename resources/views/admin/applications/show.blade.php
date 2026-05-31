@@ -53,6 +53,11 @@ Détails de la candidature
           <div class="info-label">Offre</div>
           <div class="info-value">{{ $application->offer?->title ?? 'Spontanée' }}</div>
         </div>
+
+        <div class="info-item">
+          <div class="info-label">Date de candidature</div>
+          <div class="info-value">{{ optional($application->created_at)->format('d/m/Y H:i') ?? '-' }}</div>
+        </div>
       </div>
 
       <div class="divider"></div>

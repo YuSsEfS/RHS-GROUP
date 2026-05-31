@@ -18,7 +18,7 @@ class StoreJobApplicationRequest extends FormRequest
             'city' => ['nullable','string','max:255'],
             'message' => ['nullable','string','max:10000'],
 
-            'cv' => ['nullable','file','mimes:pdf,doc,docx','max:5120'],
+            'cv' => ['required','file','mimes:pdf,doc,docx','max:5120'],
             'letter' => ['nullable','file','mimes:pdf,doc,docx','max:5120'],
         ];
     }

@@ -10,5 +10,6 @@
     <div class="min-h-screen flex items-center justify-center">
         <a href="{{ route('home') }}" class="underline">Go to Dashboard</a>
     </div>
+    <script src="{{ asset('js/rhs-ui.js') }}" defer></script>
 </body>
 </html>

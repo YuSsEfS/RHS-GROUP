@@ -12,6 +12,15 @@ class PermissionMiddleware
     {
         $user = $request->user();
 
+        if ($user?->exists) {
+            $freshUser = $user->fresh();
+
+            if ($freshUser) {
+                $user = $freshUser;
+                auth()->setUser($freshUser);
+            }
+        }
+
         if (!$user) {
             abort(403);
         }

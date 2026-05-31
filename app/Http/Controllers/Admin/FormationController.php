@@ -8,6 +8,41 @@ use Illuminate\Http\Request;
 
 class FormationController extends Controller
 {
+    public function suggest(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        if ($q === '') {
+            return response()->json([]);
+        }
+
+        $formations = Formation::query()
+            ->select('id', 'title', 'domain')
+            ->where(function ($query) use ($q) {
+                $query->where('title', 'like', "%{$q}%")
+                    ->orWhere('domain', 'like', "%{$q}%");
+            })
+            ->orderBy('title')
+            ->limit(8)
+            ->get()
+            ->map(fn (Formation $formation) => [
+                'id' => $formation->id,
+                'title' => $formation->title,
+                'domain' => $formation->domain,
+            ]);
+
+        return response()->json($formations);
+    }
+
+    public function publish(Request $request, Formation $formation)
+    {
+        $formation->update([
+            'featured' => $request->boolean('featured', !$formation->featured),
+        ]);
+
+        return back()->with('success', 'La mise en avant de la formation a ete mise a jour.');
+    }
+
     /**
      * Display a listing of formations
      */

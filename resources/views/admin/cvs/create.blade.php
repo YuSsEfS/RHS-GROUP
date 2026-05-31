@@ -19,195 +19,6 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
 @endsection
 
 @section('content')
-
-  <style>
-    .cv-form-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:18px;
-    }
-    .cv-form-item.full{
-      grid-column:1 / -1;
-    }
-    .cv-input,
-    .cv-select,
-    .cv-textarea{
-      width:100%;
-      padding:13px 14px;
-      border:1px solid #dbe2ea;
-      border-radius:14px;
-      background:#fff;
-      color:#0f172a;
-      font:inherit;
-      outline:none;
-      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-    .cv-input:focus,
-    .cv-select:focus,
-    .cv-textarea:focus{
-      border-color:#94a3b8;
-      box-shadow:0 0 0 4px rgba(148,163,184,.14);
-    }
-    .cv-textarea{
-      min-height:120px;
-      resize:vertical;
-    }
-    .upload-zone{
-      position:relative;
-      border:1.5px dashed #cbd5e1;
-      background:linear-gradient(180deg,#fbfdff 0%,#f8fafc 100%);
-      border-radius:18px;
-      padding:26px;
-      transition:border-color .18s ease, background .18s ease, transform .18s ease;
-    }
-    .upload-zone.dragover{
-      border-color:#2563eb;
-      background:#eff6ff;
-      transform:translateY(-1px);
-    }
-    .upload-zone-inner{
-      text-align:center;
-      max-width:760px;
-      margin:0 auto;
-    }
-    .upload-icon{
-      width:56px;
-      height:56px;
-      margin:0 auto 14px;
-      border-radius:16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#eef2ff;
-      color:#2563eb;
-    }
-    .upload-title{
-      margin:0 0 8px;
-      font-size:18px;
-      font-weight:800;
-      color:#0f172a;
-    }
-    .upload-subtitle{
-      margin:0 0 18px;
-      color:#64748b;
-      line-height:1.55;
-    }
-    .upload-actions{
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
-      gap:12px;
-      margin-bottom:14px;
-    }
-    .upload-hidden{
-      display:none;
-    }
-    .upload-hint{
-      color:#64748b;
-      font-size:13px;
-      margin-top:8px;
-    }
-
-    .upload-list{
-      margin-top:18px;
-      display:grid;
-      gap:10px;
-      max-height:360px;
-      overflow-y:auto;
-      overflow-x:hidden;
-      padding-right:8px;
-      scroll-behavior:smooth;
-    }
-
-    .upload-list::-webkit-scrollbar{
-      width:8px;
-    }
-    .upload-list::-webkit-scrollbar-track{
-      background:#f1f5f9;
-      border-radius:999px;
-    }
-    .upload-list::-webkit-scrollbar-thumb{
-      background:#cbd5e1;
-      border-radius:999px;
-    }
-    .upload-list::-webkit-scrollbar-thumb:hover{
-      background:#94a3b8;
-    }
-
-    .upload-file{
-      min-height:78px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      padding:12px 14px;
-      border:1px solid #e2e8f0;
-      border-radius:14px;
-      background:#fff;
-    }
-    .upload-file-name{
-      font-weight:700;
-      color:#0f172a;
-      word-break:break-word;
-    }
-    .upload-file-meta{
-      color:#64748b;
-      font-size:13px;
-      margin-top:4px;
-      word-break:break-word;
-    }
-    .upload-empty{
-      padding:14px 16px;
-      border-radius:14px;
-      background:#f8fafc;
-      color:#64748b;
-      text-align:center;
-      border:1px dashed #e2e8f0;
-    }
-    .stack-sm{
-      display:grid;
-      gap:8px;
-    }
-    .field-help{
-      color:#64748b;
-      font-size:13px;
-      line-height:1.5;
-      margin-top:6px;
-    }
-    .field-error{
-      margin-top:8px;
-      color:#dc2626;
-      font-size:14px;
-      font-weight:600;
-    }
-    .switch-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      align-items:center;
-    }
-    .soft-note{
-      padding:12px 14px;
-      border-radius:14px;
-      background:#f8fafc;
-      border:1px solid #e2e8f0;
-      color:#475569;
-      font-size:14px;
-      line-height:1.55;
-    }
-    @media (max-width: 900px){
-      .cv-form-grid{
-        grid-template-columns:1fr;
-      }
-      .cv-form-item.full{
-        grid-column:auto;
-      }
-      .upload-list{
-        max-height:340px;
-      }
-    }
-  </style>
-
   <div class="panel">
     <div class="panel-head">
       <div class="panel-title">Importer des CV</div>
@@ -384,6 +195,68 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
       </form>
     </div>
   </div>
+
+  @if($importBatch)
+    @php
+      $importStatusLabels = \App\Models\CvImportBatch::availableStatuses();
+    @endphp
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          Suivi du dernier import
+          <span class="panel-badge">{{ $importBatch->name ?: 'Import CV' }}</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="ui-progress-head">
+          <div>
+            <strong id="cv-import-status-label">{{ $importStatusLabels[$importBatch->status] ?? $importBatch->status }}</strong>
+            <div id="cv-import-status-subtext" class="ui-progress-copy">
+              {{ $importBatch->pendingFilesCount() > 0 ? 'L indexation continue en arriere-plan.' : 'Aucun traitement en attente.' }}
+            </div>
+          </div>
+          <div id="cv-import-progress-text" class="match-score">{{ $importBatch->progressPercentage() }}%</div>
+        </div>
+
+        <div class="ui-progress-track">
+          <div id="cv-import-progress-bar" class="ui-progress-bar" style="width:{{ $importBatch->progressPercentage() }}%;"></div>
+        </div>
+
+        <div class="ui-progress-kpis">
+          <span><strong id="cv-import-pending">{{ $importBatch->pendingFilesCount() }}</strong> en attente</span>
+          <span>Temps estime : <strong id="cv-import-eta">Calcul en cours</strong></span>
+        </div>
+
+        <div class="info-grid" style="margin-top:16px;">
+          <div class="info-item">
+            <div class="info-label">Total</div>
+            <div class="info-value" id="cv-import-total">{{ $importBatch->total_files }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">En file</div>
+            <div class="info-value" id="cv-import-queued">{{ $importBatch->queued_files }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Traites</div>
+            <div class="info-value" id="cv-import-processed">{{ $importBatch->processed_files }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Doublons</div>
+            <div class="info-value" id="cv-import-duplicates">{{ $importBatch->duplicate_files }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Echecs</div>
+            <div class="info-value" id="cv-import-failed">{{ $importBatch->failed_files }}</div>
+          </div>
+        </div>
+
+        <div id="cv-import-error" class="ui-progress-error">
+          {{ $importBatch->error_message }}
+        </div>
+      </div>
+    </div>
+  @endif
 
   <script>
     (function () {
@@ -567,6 +440,201 @@ Ajoutez plusieurs CV, glissez-déposez des fichiers, ou importez un dossier comp
         }
       });
     })();
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('cv-upload-form');
+      const fileInput = document.getElementById('cv_files');
+
+      if (!form || !fileInput) {
+        return;
+      }
+
+      const chunkSize = 10;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const progressBox = document.createElement('div');
+      progressBox.className = 'ui-progress-card';
+      progressBox.style.marginTop = '18px';
+      progressBox.style.display = 'none';
+      progressBox.innerHTML = `
+        <div class="ui-progress-head">
+          <strong id="cvChunkProgressText">Preparation...</strong>
+        </div>
+        <div class="ui-progress-track">
+          <div id="cvChunkProgressBar" class="ui-progress-bar" style="width:0%;"></div>
+        </div>
+      `;
+      form.appendChild(progressBox);
+
+      const progressText = document.getElementById('cvChunkProgressText');
+      const progressBar = document.getElementById('cvChunkProgressBar');
+
+      const chunkArray = function (array, size) {
+        const chunks = [];
+
+        for (let i = 0; i < array.length; i += size) {
+          chunks.push(array.slice(i, i + size));
+        }
+
+        return chunks;
+      };
+
+      const pollImportStatus = async function (statusUrl) {
+        const response = await fetch(statusUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Impossible de recuperer le statut de l import.');
+        }
+
+        const payload = await response.json();
+        const statusLabelNode = document.getElementById('cv-import-status-label');
+        const statusSubtextNode = document.getElementById('cv-import-status-subtext');
+        const statusProgressTextNode = document.getElementById('cv-import-progress-text');
+        const statusProgressBarNode = document.getElementById('cv-import-progress-bar');
+        const totalNode = document.getElementById('cv-import-total');
+        const queuedNode = document.getElementById('cv-import-queued');
+        const processedNode = document.getElementById('cv-import-processed');
+        const duplicateNode = document.getElementById('cv-import-duplicates');
+        const failedNode = document.getElementById('cv-import-failed');
+        const pendingNode = document.getElementById('cv-import-pending');
+        const etaNode = document.getElementById('cv-import-eta');
+        const errorNode = document.getElementById('cv-import-error');
+
+        const labels = {
+          en_attente: 'En attente',
+          en_cours: 'En cours',
+          termine: 'Termine',
+          echoue: 'Echoue'
+        };
+
+        if (statusLabelNode) statusLabelNode.textContent = labels[payload.status] || payload.status;
+        if (statusSubtextNode) {
+          statusSubtextNode.textContent = payload.pending_files > 0
+            ? 'L indexation continue en arriere-plan. Temps estime restant : ' + (payload.estimated_time_remaining || 'Calcul en cours') + '.'
+            : 'L import a termine son traitement.';
+        }
+        if (statusProgressTextNode) statusProgressTextNode.textContent = payload.progress_percentage + '%';
+        if (statusProgressBarNode) statusProgressBarNode.style.width = payload.progress_percentage + '%';
+        if (totalNode) totalNode.textContent = payload.total_files;
+        if (queuedNode) queuedNode.textContent = payload.queued_files;
+        if (processedNode) processedNode.textContent = payload.processed_files;
+        if (duplicateNode) duplicateNode.textContent = payload.duplicate_files || 0;
+        if (failedNode) failedNode.textContent = payload.failed_files;
+        if (pendingNode) pendingNode.textContent = payload.pending_files || 0;
+        if (etaNode) etaNode.textContent = payload.estimated_time_remaining || 'Calcul en cours';
+        if (errorNode) errorNode.textContent = payload.error_message || '';
+
+        if (payload.status === 'en_attente' || payload.status === 'en_cours') {
+          window.setTimeout(function () {
+            pollImportStatus(statusUrl).catch(function (error) {
+              if (errorNode) {
+                errorNode.textContent = error.message;
+              }
+            });
+          }, 5000);
+        }
+      };
+
+      form.addEventListener('submit', async function (event) {
+        const files = Array.from(fileInput.files || []);
+
+        if (!files.length) {
+          return;
+        }
+
+        event.preventDefault();
+
+        const csrf = form.querySelector('input[name="_token"]').value;
+        const chunks = chunkArray(files, chunkSize);
+        let batchId = null;
+        let statusUrl = null;
+        let uploaded = 0;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Upload en cours...';
+        progressBox.style.display = 'block';
+
+        try {
+          for (let i = 0; i < chunks.length; i++) {
+            const formData = new FormData();
+
+            formData.append('_token', csrf);
+            formData.append('cv_folder_id', form.querySelector('[name="cv_folder_id"]')?.value || '');
+            formData.append('new_folder_name', form.querySelector('[name="new_folder_name"]')?.value || '');
+            formData.append('city', form.querySelector('[name="city"]')?.value || '');
+            formData.append('current_title', form.querySelector('[name="current_title"]')?.value || '');
+            formData.append('notes', form.querySelector('[name="notes"]')?.value || '');
+            formData.append('chunk_index', i);
+            formData.append('total_chunks', chunks.length);
+            formData.append('total_files', files.length);
+
+            if (batchId) {
+              formData.append('batch_id', batchId);
+            }
+
+            chunks[i].forEach(function (file) {
+              formData.append('cv_files[]', file);
+              formData.append('relative_paths[]', file.webkitRelativePath || '');
+            });
+
+            const response = await fetch(form.action, {
+              method: 'POST',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+              },
+              body: formData
+            });
+
+            if (!response.ok) {
+              throw new Error('Erreur pendant l envoi du lot ' + (i + 1));
+            }
+
+            const result = await response.json();
+
+            if (!batchId) {
+              batchId = result.batch_id;
+            }
+
+            if (!statusUrl && result.status_url) {
+              statusUrl = result.status_url;
+            }
+
+            uploaded += chunks[i].length;
+
+            const percent = Math.round((uploaded / files.length) * 100);
+            progressText.textContent = `Upload ${uploaded}/${files.length} CV...`;
+            progressBar.style.width = percent + '%';
+          }
+
+          progressText.textContent = 'Upload termine. Indexation en arriere-plan...';
+          progressBar.style.width = '100%';
+
+          if (batchId) {
+            window.location.href = @json(route('admin.cvs.create')) + '?import_batch=' + batchId;
+            return;
+          }
+
+          if (statusUrl) {
+            pollImportStatus(statusUrl).catch(function () {});
+          }
+        } catch (error) {
+          alert(error.message);
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Uploader';
+          progressText.textContent = 'Erreur pendant l import.';
+        }
+      });
+
+      @if($importBatch)
+        pollImportStatus(@json(route('admin.cvs.import-status', $importBatch))).catch(function () {});
+      @endif
+    });
   </script>
 
 @endsection

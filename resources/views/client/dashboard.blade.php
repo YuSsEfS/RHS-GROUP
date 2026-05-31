@@ -2,34 +2,21 @@
 
 @php
     $statusLabels = $statuses ?? \App\Models\RecruitmentRequest::availableStatuses();
-    $alertLabels = $alertStatuses ?? \App\Models\ClientRequestAlert::availableStatuses();
-
-    $statusClass = static function (string $status): string {
-        return match ($status) {
-            'completed', 'shortlisted' => 'is-success',
-            'under_review', 'matching_in_progress' => 'is-info',
-            'rejected', 'cancelled' => 'is-danger',
-            default => 'is-warning',
-        };
-    };
-
-    $alertClass = static function (string $status): string {
-        return match ($status) {
-            'processed' => 'is-success',
-            'viewed' => 'is-info',
-            default => 'is-warning',
-        };
-    };
+    $clientOverviewChartData = collect([
+        ['label' => 'En cours', 'value' => (int) $requestsInProgress],
+        ['label' => 'Traitees', 'value' => (int) $requestsCompleted],
+        ['label' => 'Relances envoyees', 'value' => (int) $alertsCount],
+    ])->values();
 @endphp
 
 @section('title', 'Espace client')
 @section('brand', 'RHS Client')
 @section('brand_sub', 'Portail recrutement')
-@section('page_title', 'Mes demandes de recrutement')
-@section('page_copy', 'Creez vos demandes, suivez leur avancement et relancez RHS si un dossier prend trop de temps. Aucun CV, profil candidat ou resultat de matching n est expose dans cet espace.')
+@section('page_title', 'Tableau de bord client')
+@section('page_copy', 'Vue d ensemble de vos demandes. Le detail, l historique et le suivi se gerent dans des pages dediees.')
 
 @section('sidebar')
-    <a href="{{ route('client.dashboard') }}" class="is-active">Accueil</a>
+    @include('client._sidebar')
 @endsection
 
 @section('top_badge')
@@ -39,154 +26,167 @@
 @section('content')
     <div class="portal-grid portal-grid--four" style="margin-bottom:18px;">
         <div class="portal-card">
-            <h3>Demandes totales</h3>
-            <p class="portal-kpi">{{ $requests->count() }}</p>
+            <div class="portal-card-top">
+                <span class="portal-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 4h9l3 3v13H6V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        <path d="M14 4v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <h3>Demandes totales</h3>
+            </div>
+            <p class="portal-kpi">{{ $requestsCount }}</p>
+            <div class="portal-copy">Historique complet</div>
         </div>
         <div class="portal-card">
-            <h3>En cours</h3>
-            <p class="portal-kpi">{{ $requests->whereIn('request_status', ['pending', 'under_review', 'matching_in_progress'])->count() }}</p>
+            <div class="portal-card-top">
+                <span class="portal-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 12h4l2-5 4 10 2-5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <h3>Demandes en cours</h3>
+            </div>
+            <p class="portal-kpi">{{ $requestsInProgress }}</p>
+            <div class="portal-copy">Suivi actif RHS</div>
         </div>
         <div class="portal-card">
-            <h3>Traitees</h3>
-            <p class="portal-kpi">{{ $requests->whereIn('request_status', ['shortlisted', 'completed'])->count() }}</p>
+            <div class="portal-card-top">
+                <span class="portal-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="m8.5 12.5 2.2 2.2 4.8-5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <h3>Demandes traitees</h3>
+            </div>
+            <p class="portal-kpi">{{ $requestsCompleted }}</p>
+            <div class="portal-copy">Cloturees ou finalisees</div>
         </div>
         <div class="portal-card">
-            <h3>Relances envoyees</h3>
-            <p class="portal-kpi">{{ $alertsEnabled ? $requests->sum('client_alerts_count') : 0 }}</p>
+            <div class="portal-card-top">
+                <span class="portal-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 12a8 8 0 0 1 13.66-5.66L20 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20 4v4h-4M20 12a8 8 0 0 1-13.66 5.66L4 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4 20v-4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <h3>Relances envoyees</h3>
+            </div>
+            <p class="portal-kpi">{{ $alertsCount }}</p>
+            <div class="portal-copy">Suivi RHS</div>
         </div>
+    </div>
+
+    <div class="portal-split" style="margin-bottom:18px;">
+        <section class="portal-card rhs-graph-card">
+            <div class="portal-toolbar">
+                <div>
+                    <h3 class="portal-title-tight">Avancement des demandes</h3>
+                    <p class="portal-copy portal-copy-tight">Suivi interactif de votre relation recrutement avec RHS.</p>
+                </div>
+            </div>
+            <div class="rhs-chart" data-chart-type="donut" data-chart='@json($clientOverviewChartData)'></div>
+            <div class="dash-chart-list">
+                <div class="dash-chart-row" title="{{ $requestsInProgress }} demande(s) actuellement en traitement.">
+                    <div class="dash-chart-label">En cours</div>
+                    <div class="dash-chart-track"><span style="width: {{ min(100, max(8, $requestsInProgress * 18)) }}%;"></span></div>
+                    <div class="dash-chart-value">{{ $requestsInProgress }}</div>
+                </div>
+                <div class="dash-chart-row" title="{{ $requestsCompleted }} demande(s) cloturee(s) ou finalisee(s).">
+                    <div class="dash-chart-label">Traitees</div>
+                    <div class="dash-chart-track"><span style="width: {{ min(100, max(8, $requestsCompleted * 18)) }}%;"></span></div>
+                    <div class="dash-chart-value">{{ $requestsCompleted }}</div>
+                </div>
+                <div class="dash-chart-row" title="{{ $alertsCount }} relance(s) envoyee(s).">
+                    <div class="dash-chart-label">Relances envoyees</div>
+                    <div class="dash-chart-track"><span style="width: {{ min(100, max(8, $alertsCount * 14)) }}%;"></span></div>
+                    <div class="dash-chart-value">{{ $alertsCount }}</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="portal-card rhs-graph-card">
+            <div class="portal-toolbar">
+                <div>
+                    <h3 class="portal-title-tight">Prochaine action</h3>
+                    <p class="portal-copy portal-copy-tight">Votre espace reste volontairement limite aux demandes et relances.</p>
+                </div>
+            </div>
+            <div class="portal-action-grid">
+                <a href="{{ route('client.recruitment-requests.create') }}" class="portal-action-card">
+                    <strong>Nouvelle demande</strong>
+                    <span>Soumettre un besoin de recrutement sans acces aux CV ou aux scores internes.</span>
+                </a>
+                <a href="{{ route('client.recruitment-requests.index') }}" class="portal-action-card">
+                    <strong>Historique</strong>
+                    <span>Consulter vos statuts, dates et reponses RHS.</span>
+                </a>
+            </div>
+        </section>
     </div>
 
     @if(!$canManageRecruitmentRequests)
         <div class="portal-card">
-            <h3 style="margin:0 0 8px;">Module non active</h3>
-            <p class="portal-copy" style="margin:0;">
-                Votre compte client n a pas encore acces au module de demandes de recrutement. Contactez un administrateur RHS pour l activer.
-            </p>
+            <h3 class="portal-title-tight">Module non active</h3>
+            <p class="portal-copy portal-copy-tight">Votre compte client n a pas encore acces au module de demandes de recrutement.</p>
         </div>
     @else
         <div class="portal-split">
             <section class="portal-card">
-                <h3 style="margin:0 0 8px;">Nouvelle demande</h3>
-                <p class="portal-copy" style="margin-bottom:18px;">
-                    Renseignez votre besoin. Le suivi se fait ici a travers un statut global et des notes de l equipe RHS.
-                </p>
+                <div class="portal-toolbar">
+                    <div>
+                        <h3 class="portal-title-tight">Actions rapides</h3>
+                        <p class="portal-copy portal-copy-tight">Creez une nouvelle demande, consultez votre historique ou mettez a jour votre profil.</p>
+                    </div>
+                </div>
 
-                <form method="POST" action="{{ route('client.recruitment-requests.store') }}" class="portal-form-grid">
-                    @csrf
-                    <div>
-                        <label for="reference">Reference interne</label>
-                        <input id="reference" name="reference" type="text" value="{{ old('reference') }}" placeholder="Ex: RHS-CLI-001">
-                    </div>
-                    <div>
-                        <label for="position_title">Poste recherche</label>
-                        <input id="position_title" name="position_title" type="text" value="{{ old('position_title') }}" required placeholder="Ex: Responsable achats">
-                    </div>
-                    <div>
-                        <label for="work_location">Lieu de travail</label>
-                        <input id="work_location" name="work_location" type="text" value="{{ old('work_location') }}" placeholder="Ex: Casablanca">
-                    </div>
-                    <div>
-                        <label for="contract_type">Type de contrat</label>
-                        <input id="contract_type" name="contract_type" type="text" value="{{ old('contract_type') }}" placeholder="Ex: CDI">
-                    </div>
-                    <div>
-                        <label for="experience_years">Experience souhaitee</label>
-                        <input id="experience_years" name="experience_years" type="text" value="{{ old('experience_years') }}" placeholder="Ex: 5 ans minimum">
-                    </div>
-                    <div>
-                        <label for="planned_start_date">Date souhaitee</label>
-                        <input id="planned_start_date" name="planned_start_date" type="date" value="{{ old('planned_start_date') }}">
-                    </div>
-                    <div class="full">
-                        <label for="missions">Missions principales</label>
-                        <textarea id="missions" name="missions" rows="5" placeholder="Decrivez les principales missions du poste">{{ old('missions') }}</textarea>
-                    </div>
-                    <div class="full">
-                        <label for="specific_knowledge">Competences et connaissances requises</label>
-                        <textarea id="specific_knowledge" name="specific_knowledge" rows="4" placeholder="Logiciels, langues, certifications, environnement metier">{{ old('specific_knowledge') }}</textarea>
-                    </div>
-                    <div class="full">
-                        <label for="personal_qualities">Qualites attendues</label>
-                        <textarea id="personal_qualities" name="personal_qualities" rows="3" placeholder="Ex: rigueur, leadership, sens de l organisation">{{ old('personal_qualities') }}</textarea>
-                    </div>
-                    <div class="full form-actions-inline">
-                        <button type="submit" class="admin-btn admin-btn-primary portal-btn-auto">Envoyer la demande</button>
-                    </div>
-                </form>
+                <div class="portal-action-grid">
+                    <a href="{{ route('client.recruitment-requests.create') }}" class="portal-action-card">
+                        <strong>Nouvelle demande de recrutement</strong>
+                        <span>Ouvrir le formulaire dedie pour un nouveau besoin.</span>
+                    </a>
+                    <a href="{{ route('client.recruitment-requests.index') }}" class="portal-action-card">
+                        <strong>Historique des demandes</strong>
+                        <span>Voir la liste complete puis ouvrir chaque demande en detail.</span>
+                    </a>
+                    <a href="{{ route('client.profile.edit') }}" class="portal-action-card">
+                        <strong>Mon profil</strong>
+                        <span>Mettre a jour vos coordonnees et votre photo de profil si besoin.</span>
+                    </a>
+                </div>
             </section>
 
             <section class="portal-card">
-                <div class="portal-section-head">
+                <div class="portal-toolbar">
                     <div>
-                        <h3 style="margin:0 0 8px;">Historique et suivi</h3>
-                        <p class="portal-copy" style="margin:0;">Les notes admin visibles ici restent generales. Aucun CV, candidat ou score n est affiche au client.</p>
+                        <h3 class="portal-title-tight">Dernieres demandes</h3>
+                        <p class="portal-copy portal-copy-tight">Apercu des demandes les plus recentes.</p>
                     </div>
                 </div>
 
                 <div class="portal-timeline">
-                    @forelse($requests as $requestItem)
+                    @forelse($latestRequests as $requestItem)
                         <article class="portal-record">
                             <div class="portal-record-top">
                                 <div>
                                     <strong>{{ $requestItem->position_title }}</strong>
-                                    <div class="portal-copy">
-                                        Reference: {{ $requestItem->reference ?: '-' }} ·
-                                        Date: {{ optional($requestItem->request_date)->format('d/m/Y') ?: $requestItem->created_at->format('d/m/Y') }} ·
-                                        Lieu: {{ $requestItem->work_location ?: '-' }}
-                                    </div>
+                                    <div class="portal-copy">{{ optional($requestItem->request_date)->format('d/m/Y') ?: $requestItem->created_at->format('d/m/Y') }}</div>
                                 </div>
-                                <span class="portal-status {{ $statusClass($requestItem->request_status) }}">
+                                <span class="portal-status {{ in_array($requestItem->request_status, ['completed', 'shortlisted']) ? 'is-success' : (in_array($requestItem->request_status, ['under_review', 'matching_in_progress']) ? 'is-info' : 'is-warning') }}">
                                     {{ $statusLabels[$requestItem->request_status] ?? ucfirst(str_replace('_', ' ', $requestItem->request_status)) }}
                                 </span>
                             </div>
-
-                            @if($requestItem->missions)
-                                <p class="portal-record-copy">{{ \Illuminate\Support\Str::limit($requestItem->missions, 220) }}</p>
-                            @endif
-
-                            @if($requestItem->admin_notes)
-                                <div class="portal-note">
-                                    <strong style="display:block; margin-bottom:6px;">Message RHS</strong>
-                                    {{ $requestItem->admin_notes }}
-                                </div>
-                            @endif
-
-                            @if($alertsEnabled && $requestItem->clientAlerts->isNotEmpty())
-                                <div class="portal-subsection">
-                                    <strong class="portal-subtitle">Dernieres relances</strong>
-                                    <div class="portal-mini-list">
-                                        @foreach($requestItem->clientAlerts as $alert)
-                                            <div class="portal-mini-item">
-                                                <span class="portal-status {{ $alertClass($alert->status) }}">
-                                                    {{ $alertLabels[$alert->status] ?? $alert->status }}
-                                                </span>
-                                                <div class="portal-mini-copy">
-                                                    {{ $alert->message ?: 'Relance sans message complementaire.' }}
-                                                    @if($alert->admin_response)
-                                                        <div class="portal-note" style="margin-top:8px;">{{ $alert->admin_response }}</div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($alertsEnabled)
-                                <form method="POST" action="{{ route('client.recruitment-requests.alerts.store', $requestItem) }}" class="portal-inline-form">
-                                    @csrf
-                                    <div class="full">
-                                        <label for="alert-message-{{ $requestItem->id }}">Envoyer une relance</label>
-                                        <textarea id="alert-message-{{ $requestItem->id }}" name="message" rows="3" placeholder="Message optionnel pour preciser votre relance"></textarea>
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-ghost portal-btn-auto">Relancer RHS</button>
-                                </form>
-                            @endif
+                            <div class="portal-form-actions" style="justify-content:flex-start; margin-top:12px;">
+                                <a href="{{ route('client.recruitment-requests.show', $requestItem) }}" class="admin-btn admin-btn-ghost portal-btn-auto">Ouvrir</a>
+                            </div>
                         </article>
                     @empty
                         <div class="portal-empty">
-                            <div class="portal-empty-title">Aucune demande pour le moment</div>
-                            <div class="portal-empty-copy">Votre historique apparaitra ici des qu une demande sera enregistree.</div>
+                            <div class="portal-empty-title">Aucune demande recente</div>
+                            <div class="portal-empty-copy">Votre premiere demande apparaitra ici apres creation.</div>
                         </div>
                     @endforelse
                 </div>

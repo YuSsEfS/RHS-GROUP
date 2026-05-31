@@ -27,12 +27,6 @@ Gérez les textes & images par page. Les médias sont stockés dans <code>storag
 @section('content')
 <div class="ac-wrap">
 
-  @if(session('success'))
-    <div class="ac-alert-success">
-      {{ session('success') }}
-    </div>
-  @endif
-
   @php
     $pagesGrouped = $blocks->groupBy('page');
     $pagesCount = $pagesGrouped->count();
